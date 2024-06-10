@@ -1,0 +1,14 @@
+#autoForm input[type="text"] {
+    height: 30px;
+    padding: 2px 5px;
+  }
+  
+  #autoForm label {
+    font-size: 21px;
+    display: inline-block;
+    width: 190px;
+}
+  #autoForm input[type="text"] {
+    font-size: 21px;
+  }
+  

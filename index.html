@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Gestion Assurance</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
+  </head>
+  <body>
+    <h1>Gestion des dossiers</h1>
+    <div class="button-container">
+      <button class="color-button" onclick="nouveauClient()">Nouveau client</button>
+      <button class="color-button" onclick="clientPortefeuille()">Client déjà en portefeuille</button>
+    </div>
+    <div class="button-container">
+      <button class="color-button" onclick="ajoutDocument()">Ajout de documents</button>
+    </div>
+    <script>
+      function nouveauClient() {
+        window.location.href = 'nouveau_client.html';
+      }
+
+      function clientPortefeuille() {
+        window.location.href = 'recherche_client.html';
+      }
+
+      function ajoutDocument() {
+        window.location.href = 'ajout_doc.html';
+      }
+    </script>
+  </body>
+</html>

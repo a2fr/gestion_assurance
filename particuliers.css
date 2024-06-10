@@ -1,0 +1,10 @@
+#particuliersForm input[type="text"] {
+    height: 30px;
+    padding: 2px 5px;
+  }
+  
+  #particuliersForm label,
+  #particuliersForm input[type="text"] {
+    font-size: 21px;
+  }
+  

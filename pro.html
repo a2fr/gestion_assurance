@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Professionel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="pro.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Professionel</h1>
+    <form id="proForm">
+      <label for="numeroSociete">Numéro de société :</label>
+      <input type="text" id="numeroSociete" name="numeroSociete"><br><br>
+      <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
+      <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      function retourNouveauClient() {
+        window.location.href = 'nouveau_client.html';
+      }
+
+      document.getElementById('proForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const numeroSociete = document.getElementById('numeroSociete').value;
+        ipcRenderer.send('submit-pro', { numeroSociete });
+      });
+
+      ipcRenderer.on('folder-created', (event, type) => {
+        if (type === 'pro') {
+          window.location.href = 'produits.html';
+        }
+      });
+    </script>
+  </body>
+</html>

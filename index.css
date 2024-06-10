@@ -1,0 +1,17 @@
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .color-button {
+    background-color: mediumblue;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  
+  .color-button:hover {
+    background-color: darkblue;
+    color: azure;
+  }
+  

@@ -1,0 +1,13 @@
+#proForm input[type="text"] {
+    height: 30px;
+    padding: 2px 5px;
+  }
+  
+  #proForm label {
+    font-size: 21px;
+    display: inline;
+}
+  #proForm input[type="text"] {
+    font-size: 21px;
+  }
+  

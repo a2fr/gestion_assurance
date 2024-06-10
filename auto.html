@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Informations Voiture</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="auto.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Informations du véhicule</h1>
+    <form id="autoForm">
+      <label for="marque">Marque :</label>
+      <input type="text" id="marque" name="marque"><br><br>
+      <label for="modele">Modèle :</label>
+      <input type="text" id="modele" name="modele"><br><br>
+      <label for="immatriculation">Immatriculation :</label>
+      <input type="text" id="immatriculation" name="immatriculation"><br><br>
+      <label for="numeroContrat">Numéro de contrat :</label>
+      <input type="text" id="numeroContrat" name="numeroContrat"><br><br>
+      <button type="button" class="back-button" onclick="retourProduits()"><i class="fas fa-arrow-left"></i> Retour</button>
+      <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      function retourProduits() {
+        window.location.href = 'produits.html';
+      }
+
+      document.getElementById('autoForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const marque = document.getElementById('marque').value;
+        const modele = document.getElementById('modele').value;
+        const immatriculation = document.getElementById('immatriculation').value;
+        const numeroContrat = document.getElementById('numeroContrat').value;
+        ipcRenderer.send('submit-auto', { marque, modele, immatriculation, numeroContrat });
+      });
+
+      ipcRenderer.on('auto-folder-created', () => {
+        window.location.href = 'documents.html';
+      });
+    </script>
+  </body>
+</html>

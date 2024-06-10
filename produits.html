@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Produits</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="produits.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Sélectionner les produits</h1>
+    <form id="produitsForm">
+      <div class="produitsContainer">
+        <label><input type="checkbox" name="produits" value="AUTO"> AUTO</label><br>
+        <label><input type="checkbox" name="produits" value="HABITATION (MRH)"> HABITATION (MRH)</label><br>
+        <label><input type="checkbox" name="produits" value="SANTE"> SANTE</label><br>
+        <label><input type="checkbox" name="produits" value="MRP"> MRP</label><br>
+        <label><input type="checkbox" name="produits" value="PNO"> PNO</label><br>
+        <label><input type="checkbox" name="produits" value="ASSURANCE DE PRÊT"> ASSURANCE DE PRÊT</label><br>
+        <label><input type="checkbox" name="produits" value="RC PRO"> RC PRO</label><br>
+        <label><input type="checkbox" name="produits" value="RCD"> RCD</label><br>
+        <label><input type="checkbox" name="produits" value="SANTE COLL"> SANTE COLL</label><br>
+        <label><input type="checkbox" name="produits" value="PREV COLL"> PREV COLL</label><br><br>
+      </div>
+      <button type="button" class="home-button"><i class="fas fa-home"></i> Home</button>
+      <button type="submit" class="submit-button">Choisir <i class="fas fa-arrow-right"></i></button>
+    </form>
+    <script>
+      document.getElementById('produitsForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const selectedProducts = Array.from(document.querySelectorAll('input[name="produits"]:checked')).map(checkbox => checkbox.value);
+        if (selectedProducts.includes('AUTO')) {
+          window.location.href = 'auto.html';
+        } else {
+          alert('Produits sélectionnés: ' + selectedProducts.join(', '));
+          // Ici, tu peux ajouter du code pour gérer les autres produits sélectionnés
+        }
+      });
+
+      document.querySelector('.home-button').addEventListener('click', function() {
+        window.location.href = 'index.html';
+      });
+    </script>
+  </body>
+</html>

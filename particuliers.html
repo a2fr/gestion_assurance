@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Particuliers</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="particuliers.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Particuliers</h1>
+    <form id="particuliersForm">
+      <label for="nom">Nom :</label>
+      <input type="text" id="nom" name="nom"><br><br>
+      <label for="prenom">Prénom :</label>
+      <input type="text" id="prenom" name="prenom"><br><br>
+      <label for="telephone">Téléphone :</label>
+      <input type="text" id="telephone" name="telephone"><br><br>
+      <label for="mail">Mail :</label>
+      <input type="text" id="mail" name="mail"><br><br>
+      <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
+      <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      function retourNouveauClient() {
+        window.location.href = 'nouveau_client.html';
+      }
+
+      document.getElementById('particuliersForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const nom = document.getElementById('nom').value;
+        const prenom = document.getElementById('prenom').value;
+        const telephone = document.getElementById('telephone').value;
+        const mail = document.getElementById('mail').value;
+        ipcRenderer.send('submit-particuliers', { nom, prenom, telephone, mail });
+      });
+
+      ipcRenderer.on('folder-created', (event, type) => {
+        if (type === 'particuliers') {
+          window.location.href = 'produits.html';
+        }
+      });
+    </script>
+  </body>
+</html>

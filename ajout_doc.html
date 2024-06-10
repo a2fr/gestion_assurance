@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Recherche Contrat</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="recherche_client.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <h1>Recherche Contrat</h1>
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Rechercher par numéro de contrat">
+    <ul id="searchResults"></ul>
+    <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="submit" class="submit-button">Valider <i class="fas fa-arrow-right"></i></button>
+  </form>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function retourIndex() {
+      window.location.href = 'index.html';
+    }
+
+    document.getElementById('searchInput').addEventListener('input', function() {
+      const query = this.value;
+      ipcRenderer.send('search-contract', query);
+    });
+
+    ipcRenderer.on('search-results', (event, results) => {
+      const searchResults = document.getElementById('searchResults');
+      searchResults.innerHTML = '';
+      results.forEach(result => {
+        const li = document.createElement('li');
+        li.textContent = result;
+        li.addEventListener('click', () => {
+          document.getElementById('searchInput').value = result;
+          searchResults.innerHTML = '';
+        });
+        searchResults.appendChild(li);
+      });
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const selectedContract = document.getElementById('searchInput').value;
+      ipcRenderer.send('select-contract', { selectedContract });
+    });
+
+    ipcRenderer.on('contract-selected', (event, type) => {
+        window.location.href = 'documents.html';
+    });
+  </script>
+</body>
+</html>

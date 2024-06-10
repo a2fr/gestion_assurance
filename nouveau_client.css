@@ -1,0 +1,16 @@
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .color-button {
+    background-color: firebrick;
+    color: white;
+    transition: background-color 0.3s ease;
+  }
+  
+  .color-button:hover {
+    background-color: darkred;
+    color: azure;
+  }
+  
