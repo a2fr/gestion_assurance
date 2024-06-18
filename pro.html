@@ -11,7 +11,7 @@
     <h1>Professionel</h1>
     <form id="proForm">
       <label for="numeroSociete">Numéro de société :</label>
-      <input type="text" id="numeroSociete" name="numeroSociete"><br><br>
+      <input type="text" id="numeroSociete" name="numeroSociete" autofocus><br><br>
       <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
       <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
     </form>
@@ -30,6 +30,7 @@
 
       ipcRenderer.on('folder-created', (event, type) => {
         if (type === 'pro') {
+          localStorage.setItem('isPro', true);
           window.location.href = 'produits.html';
         }
       });

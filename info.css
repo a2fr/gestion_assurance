@@ -1,0 +1,14 @@
+input[type="text"] {
+  height: 30px;
+  padding: 2px 5px;
+}
+  
+label {
+  font-size: 21px;
+  display: inline-block;
+  width: 190px;
+}
+
+input[type="text"] {
+  font-size: 21px;
+}

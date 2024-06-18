@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Contrat Choix</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <style>
+    .red-back-button {
+      background-color: firebrick;
+      color: aliceblue;
+      font-size: 19px;
+      transition: background-color 0.3s ease;
+      border-radius: 42px;
+      width: 150px;
+      height: 75px;
+    }
+    .red-back-button:hover {
+      background-color: darkred;
+    }
+  </style>
+  <h1>De quel type de contrat s'agit-il?</h1>
+  <h2><div id="variable-display"></div></h2>
+  <button class="color-button" onclick="window.location.href='documents_auto.html'">
+    <i class="fas fa-car"></i> Auto
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_habitation.html'">
+    <i class="fas fa-home"></i> Habitation
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_mrp.html'">
+    <i class="fas fa-file-invoice"></i> MRP
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_sante_tns.html'">
+    <i class="fas fa-user-md"></i> Santé TNS
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_sante.html'">
+    <i class="fas fa-heartbeat"></i> Santé
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_sante_collective.html'">
+    <i class="fas fa-users"></i> Santé collective
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_prevention_tns.html'">
+    <i class="fas fa-user-shield"></i> Prévention TNS
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_prevention_collective.html'">
+    <i class="fas fa-shield-alt"></i> Prévention collective
+  </button>
+  <button class="color-button" onclick="window.location.href='documents_divers.html'">
+    <i class="fas fa-list"></i> Divers
+  </button>
+  <button type="button" class="red-back-button" onclick="retourIndex()">
+    <i class="fas fa-arrow-left"></i> Retour
+  </button>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function retourIndex() {
+      window.location.href = 'ajout_doc.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestDocName('');
+    });
+
+    function requestDocName() {
+      ipcRenderer.send('request-doc-name');
+    }
+
+    ipcRenderer.on('doc-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
     <title>Gestion Assurance</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
   </head>
   <body>
     <h1>Gestion des dossiers</h1>
@@ -14,8 +15,15 @@
     </div>
     <div class="button-container">
       <button class="color-button" onclick="ajoutDocument()">Ajout de documents</button>
+      <button class="color-button" onclick="fusion()">Fusion de dossier</button>
     </div>
+    <button id="open-file-manager-btn" class="folder-button" onclick="openFileManager()"><i class="fa fa-folder"></i> Ouvrir le dossier en cours</button>
     <script>
+      const { ipcRenderer } = require('electron');
+
+      function openFileManager() {
+        ipcRenderer.send('open-file-manager');
+      }
       function nouveauClient() {
         window.location.href = 'nouveau_client.html';
       }
@@ -26,6 +34,10 @@
 
       function ajoutDocument() {
         window.location.href = 'ajout_doc.html';
+      }
+
+      function fusion() {
+        window.location.href = 'fusion.html';
       }
     </script>
   </body>

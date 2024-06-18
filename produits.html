@@ -8,30 +8,36 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
   </head>
   <body>
-    <h1>Sélectionner les produits</h1>
+    <h1>Sélectionner le type de contrat</h1>
+    <h2><div id="variable-display"></div></h2>
     <form id="produitsForm">
       <div class="produitsContainer">
-        <label><input type="checkbox" name="produits" value="AUTO"> AUTO</label><br>
-        <label><input type="checkbox" name="produits" value="HABITATION (MRH)"> HABITATION (MRH)</label><br>
-        <label><input type="checkbox" name="produits" value="SANTE"> SANTE</label><br>
-        <label><input type="checkbox" name="produits" value="MRP"> MRP</label><br>
-        <label><input type="checkbox" name="produits" value="PNO"> PNO</label><br>
-        <label><input type="checkbox" name="produits" value="ASSURANCE DE PRÊT"> ASSURANCE DE PRÊT</label><br>
-        <label><input type="checkbox" name="produits" value="RC PRO"> RC PRO</label><br>
-        <label><input type="checkbox" name="produits" value="RCD"> RCD</label><br>
-        <label><input type="checkbox" name="produits" value="SANTE COLL"> SANTE COLL</label><br>
-        <label><input type="checkbox" name="produits" value="PREV COLL"> PREV COLL</label><br><br>
+        <label><input type="radio" name="produits" value="AUTO"> Auto</label><br>
+        <label><input type="radio" name="produits" value="HABITATION (MRH)"> Habitation (MRH)</label><br>
+        <label><input type="radio" name="produits" value="MRP"> MRP</label><br>
+        <label><input type="radio" name="produits" value="SANTE_TNS"> Santé TNS</label><br>
+        <label><input type="radio" name="produits" value="SANTE"> Santé</label><br>
+        <label><input type="radio" name="produits" value="SANTE COLLECTIVE"> Santé collective</label><br>
+        <label><input type="radio" name="produits" value="PREVENTION TNS"> Prévention TNS</label><br>
+        <label><input type="radio" name="produits" value="PREVENTION COLLECTIVE"> Prévention collective</label><br>
+        <label><input type="radio" name="produits" value="DIVERS"> Divers</label><br><br>
       </div>
       <button type="button" class="home-button"><i class="fas fa-home"></i> Home</button>
       <button type="submit" class="submit-button">Choisir <i class="fas fa-arrow-right"></i></button>
     </form>
     <script>
+      const { ipcRenderer } = require('electron');
+
       document.getElementById('produitsForm').addEventListener('submit', function(event) {
         event.preventDefault();
-        const selectedProducts = Array.from(document.querySelectorAll('input[name="produits"]:checked')).map(checkbox => checkbox.value);
+        const selectedProducts = Array.from(document.querySelectorAll('input[name="produits"]:checked')).map(radio => radio.value);
         if (selectedProducts.includes('AUTO')) {
-          window.location.href = 'auto.html';
-        } else {
+          window.location.href = 'info_auto.html';
+        }
+        else if (selectedProducts.includes('HABITATION (MRH)')) {
+          window.location.href = 'info_habitation.html';
+        }
+        else {
           alert('Produits sélectionnés: ' + selectedProducts.join(', '));
           // Ici, tu peux ajouter du code pour gérer les autres produits sélectionnés
         }
@@ -39,6 +45,18 @@
 
       document.querySelector('.home-button').addEventListener('click', function() {
         window.location.href = 'index.html';
+      });
+
+      document.addEventListener('DOMContentLoaded', function() {
+        requestClientName('');
+      });
+
+      function requestClientName() {
+        ipcRenderer.send('request-client-name');
+      }
+
+      ipcRenderer.on('client-name', (event, variable) => {
+        document.getElementById('variable-display').innerText = variable;
       });
     </script>
   </body>

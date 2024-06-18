@@ -1,0 +1,34 @@
+body {
+    color: wheat;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid wheat;
+    text-align: center;
+}
+th {
+    padding: 8px;
+}
+td {
+    height: 75px;
+}
+.fa-check-circle {
+    color: green;
+}
+.fa-times-circle {
+    color: red;
+}
+input[type="file"] {
+    width: 100%;
+    height: 100%;
+    box-sizing: content-box;
+    margin-left: 0;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+input:hover {
+    background-color: dimgray;
+}

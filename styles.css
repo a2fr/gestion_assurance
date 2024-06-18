@@ -16,7 +16,7 @@ button {
 }
 
 .back-button {
-  border-radius: 0;
+  border-radius: 42px;
   width: 150px;
   height: 75px;
   background-color: mediumblue;
@@ -34,7 +34,7 @@ button {
 }
 
 .submit-button {
-  border-radius: 0;
+  border-radius: 42px;
   width: 175px;
   height: 75px;
   background-color: firebrick;
@@ -84,4 +84,40 @@ input {
 
 h1 {
   color: whitesmoke;
+}
+
+h2 {
+  color: wheat;
+}
+
+.folder-button {
+  border-radius: 42px;
+  width: 225px;
+  height: 75px;
+  background-color: rebeccapurple;
+  color: aliceblue;
+  font-size: 19px;
+  transition: background-color 0.3s ease;
+}
+
+.folder-button:hover {
+  background-color: indigo;
+}
+
+.search-container {
+  position: relative; /* Permet de positionner la croix à l'intérieur du champ de recherche */
+}
+
+.clear-button {
+  position: absolute; /* Positionne la croix à droite du champ de recherche */
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%); /* Centre la croix verticalement */
+  cursor: pointer; /* Affiche le curseur de la main lorsque la croix est survolée */
+  display: none; /* Cache la croix par défaut */
+  color: black;
+}
+
+#searchInput:valid ~ .clear-button {
+  display: block; /* Affiche la croix lorsque le champ de recherche contient du texte */
 }

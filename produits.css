@@ -1,23 +1,26 @@
 label {
-    width: auto;
-    text-align: left;
+  width: auto;
+  text-align: left;
 }
 
 .produitsContainer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  
-  #produitsForm label {
-    display: flex;
-    align-items: center;
-  }
-  
-  #produitsForm input[type="checkbox"] {
-    margin-right: 10px;
-  }
-  
-  input[type="checkbox"] {
-    transform: scale(2);
-  }
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+#produitsForm label {
+  display: flex;
+  align-items: center;
+  font-size: larger;
+}
+
+#produitsForm input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Cible les boutons radio */
+input[type="radio"] {
+  transform: scale(1.5); /* Ajustez la valeur pour agrandir ou réduire les boutons radio */
+  margin-right: 5px; /* Ajoute une marge à droite pour séparer les boutons radio du texte */
+}

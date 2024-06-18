@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Document Habitation</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="documents.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <h1>Document Habitation</h1>
+  <h2>
+    <div id="variable-display"></div>
+  </h2>
+  <br>
+  <table>
+    <thead>
+      <tr>
+        <th>Document</th>
+        <th>Upload</th>
+      </tr>
+    </thead>
+    <tbody id="document-table-body">
+      <tr>
+        <td>Bail</td>
+        <td><input type="file" id="upload-bail" data-doc="bail"></td>
+      </tr>
+      <tr>
+        <td>CNI</td>
+        <td><input type="file" id="upload-cni" data-doc="cni"></td>
+      </tr>
+      <tr>
+        <td>Devis</td>
+        <td><input type="file" id="upload-devis" data-doc="devis"></td>
+      </tr>
+      <tr>
+        <td>Contrat</td>
+        <td><input type="file" id="upload-contrat" data-doc="contrat"></td>
+      </tr>
+      <tr>
+        <td>RIB</td>
+        <td><input type="file" id="upload-rib" data-doc="rib"></td>
+      </tr>
+      <tr class="kbisRow">
+        <td>KBIS</td>
+        <td><input type="file" id="upload-kbis" data-doc="kbis"></td>
+      </tr>  
+    </tbody>
+  </table>
+  <br>
+  <button id="open-file-manager-btn" class="folder-button" onclick="openFileManager()"><i class="fa fa-folder"></i> Ouvrir le dossier</button>
+  <button type="submit" id="docForm" class="submit-button">Enregistrer <i class="fas fa-arrow-right"></i></button>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function openFileManager() {
+      ipcRenderer.send('open-file-manager');
+    }
+
+    function toggleKbisRow() {
+      const kbisRow = document.querySelector('#document-table-body tr:last-child');
+      isPro = window.localStorage.getItem('isPro');
+      if (isPro === 'false') {
+        kbisRow.style.display = 'none';
+      }
+    }
+
+    // Exécuter la fonction toggleKbisRow() lorsque le DOM est entièrement chargé
+    document.addEventListener('DOMContentLoaded', toggleKbisRow);
+
+    document.getElementById('docForm').addEventListener('click', async function() {
+      const files = {};
+      const documentInputs = document.querySelectorAll('[data-doc]');
+      for (const input of documentInputs) {
+        if (input.files.length > 0) {
+          const file = input.files[0];
+          const arrayBuffer = await file.arrayBuffer();
+          files[input.dataset.doc] = {
+            name: file.name,
+            data: Buffer.from(arrayBuffer)
+          };
+        }
+      }
+      ipcRenderer.send('submit-documents', files);
+    });
+
+    ipcRenderer.on('files-uploaded', (event, type) => {
+      window.location.href = 'index.html';
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestDocName('');
+    });
+
+    function requestDocName() {
+      ipcRenderer.send('request-doc-name');
+    }
+
+    ipcRenderer.on('doc-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
+    
+  </script>
+</body>
+</html>

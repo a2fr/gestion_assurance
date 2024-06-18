@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Type de client</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+    <style>
+        .red-back-button {
+            background-color: firebrick;
+            color: aliceblue;
+            font-size: 19px;
+            transition: background-color 0.3s ease;
+            border-radius: 42px;
+            width: 150px;
+            height: 75px;
+        }
+        .red-back-button:hover {
+            background-color: darkred;
+        }
+    </style>
+    <h1>Quel est le type du client sélectionné?</h1>
+    <h2><div id="variable-display"></div></h2>
+    <button id="particulier-button" type="button" class="color-button"><i class="fas fa-user"></i> Particulier</button>
+    <button id="pro-button" type="button" class="color-button"><i class="fas fa-briefcase"></i> Pro</button>
+    <button type="button" class="red-back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function retourIndex() {
+            window.location.href = 'recherche_client.html';
+        }
+
+        document.getElementById('particulier-button').addEventListener('click', () => {
+            localStorage.setItem('isPro', false);
+            window.location.href = 'produits.html';
+        });
+
+        document.getElementById('pro-button').addEventListener('click', () => {
+            localStorage.setItem('isPro', true);
+            window.location.href = 'produits.html';
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            requestClientName('');
+        });
+
+        function requestClientName() {
+            ipcRenderer.send('request-client-name');
+        }
+
+        ipcRenderer.on('client-name', (event, variable) => {
+            document.getElementById('variable-display').innerText = variable;
+        });
+    </script>
+</body>
+</html>

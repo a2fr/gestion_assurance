@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fusion Client 2</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="recherche_client.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <h1>Choisissez le deuxième client à fusionner</h1>
+  <h2>
+    <div id="variable-display"></div>
+  </h2>
+  <form id="searchForm">
+    <input type="text" id="searchInput" placeholder="Rechercher par nom, prénom ou numéro de société" autofocus required>
+    <ul id="searchResults"></ul>
+    <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="submit" class="submit-button">Valider <i class="fas fa-arrow-right"></i></button>
+  </form>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function retourIndex() {
+      window.location.href = 'fusion.html';
+    }
+
+    // Créez une fonction pour la recherche de client
+    function searchClient(query) {
+      ipcRenderer.send('search-client-fusion2', query);
+    }
+
+    // Récupérez l'élément d'entrée de recherche
+    const searchInput = document.getElementById('searchInput');
+
+    // Exécutez la recherche de client une fois au chargement de la page avec une chaîne de requête vide
+    document.addEventListener('DOMContentLoaded', function() {
+      searchClient('');
+    });
+
+    // Ajoutez un écouteur d'événement d'entrée sur l'élément de recherche
+    searchInput.addEventListener('input', function() {
+      const query = this.value;
+      searchClient(query);
+    });
+
+    ipcRenderer.on('search-results', (event, results) => {
+      const searchResults = document.getElementById('searchResults');
+      searchResults.innerHTML = '';
+      results.forEach(result => {
+        const li = document.createElement('li');
+        // Store full name in a data attribute
+        li.dataset.fullName = result;
+
+        // Use a short display name with ellipsis if needed
+        const displayName = result.length > 42 ? result.substring(0, 42) + '...' : result;
+        li.textContent = displayName;
+
+        searchResults.appendChild(li);
+
+        li.addEventListener('click', () => {
+          document.getElementById('searchInput').value = result;
+          searchResults.innerHTML = '';
+        });
+      });
+    });
+
+    document.getElementById('searchForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const selectedClient = document.getElementById('searchInput').value;
+      ipcRenderer.send('submit-fusion', { selectedClient });
+    });
+
+    ipcRenderer.on('folders-merged', (event, type) => {
+      window.location.href = 'index.html';
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestClientName('');
+    });
+
+    function requestClientName() {
+      ipcRenderer.send('request-client-name');
+    }
+
+    ipcRenderer.on('client-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
+  </script>
+</body>
+</html>

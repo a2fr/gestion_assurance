@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Informations Habitation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Informations du logement</h1>
+    <form id="habitationForm">
+        <label for="numeroRue">Numéro de rue :</label>
+        <input type="text" id="numeroRue" name="numeroRue" autofocus><br><br>
+    
+        <label for="typeRue">Type de la rue :</label>
+        <input type="text" id="typeRue" name="typeRue"><br><br>
+    
+        <label for="nomRue">Nom de la rue :</label>
+        <input type="text" id="nomRue" name="nomRue"><br><br>
+    
+        <label for="codePostal">Code Postal :</label>
+        <input type="text" id="codePostal" name="codePostal"><br><br>
+    
+        <label for="ville">Ville :</label>
+        <input type="text" id="ville" name="ville"><br><br>
+    
+        <label for="numeroContrat">Numéro de contrat :</label>
+        <input type="text" id="numeroContrat" name="numeroContrat" required><br><br>
+    
+        <button type="button" class="back-button" onclick="retourProduits()"><i class="fas fa-arrow-left"></i> Retour</button>
+        <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function retourProduits() {
+            window.location.href = 'produits.html';
+        }
+
+        document.getElementById('habitationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const numeroRue = document.getElementById('numeroRue').value;
+            const typeRue = document.getElementById('typeRue').value;
+            const nomRue = document.getElementById('nomRue').value;
+            const codePostal = document.getElementById('codePostal').value;
+            const ville = document.getElementById('ville').value;
+            const numeroContrat = document.getElementById('numeroContrat').value;
+
+            ipcRenderer.send('submit-habitation', {
+                numeroRue,
+                typeRue,
+                nomRue,
+                codePostal,
+                ville,
+                numeroContrat
+            });
+        });
+
+
+      ipcRenderer.on('habitation-folder-created', () => {
+        window.location.href = 'documents_habitation.html';
+      });
+    </script>
+  </body>
+</html>
