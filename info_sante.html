@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Informations Santé</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="info.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <h1>Informations de santé</h1>
+  <form id="santePrevForm">
+    <label for="numeroContrat">Numéro de contrat :</label>
+    <input type="text" id="numeroContrat" name="numeroContrat" placeholder="123456789" required autofocus><br><br>
+    <button type="button" class="back-button" onclick="retourProduits()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+  </form>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function retourProduits() {
+      window.location.href = 'produits.html';
+    }
+
+    document.getElementById('santePrevForm').addEventListener('submit', function(event) {
+      event.preventDefault();
+
+      const numeroContrat = document.getElementById('numeroContrat').value;
+
+      ipcRenderer.send('submit-sante-prev', {
+        numeroContrat
+      });
+    });
+
+    ipcRenderer.on('sante-prev-folder-created', (event, type_doc) => {
+      // Add your switch case structure here
+      switch (type_doc) {
+        case 'sante_tns':
+          window.location.href = 'documents_sante.html';
+          break;
+        case 'sante':
+          window.location.href = 'documents_sante.html';
+          break;
+        case 'sante_coll':
+          window.location.href = 'documents_sante_collective.html';
+          break;
+        case 'prev_tns':
+          window.location.href = 'documents_sante.html';
+          break;
+        case 'prev_coll':
+          window.location.href = 'documents_sante_collective.html';
+          break;
+        default:
+          // Code to execute if numeroContrat doesn't match any case
+          break;
+      }
+    });
+  </script>
+</body>
+</html>

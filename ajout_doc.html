@@ -9,6 +9,7 @@
 </head>
 <body>
   <h1>Recherche d'un contrat</h1>
+  <h2><div id="variable-display"></div></h2>
   <form id="searchForm">
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Rechercher par numéro de contrat" autofocus required>
@@ -21,9 +22,22 @@
   <script>
     const { ipcRenderer } = require('electron');
 
+    document.addEventListener('DOMContentLoaded', function() {
+      ipcRenderer.send('store-reglement');
+    });
+
     function retourIndex() {
-      window.location.href = 'index.html';
+      ipcRenderer.send('get-reglement');
     }
+
+    ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+      if (isReglement === true) {
+        window.location.href = 'recherche_client.html';
+      } else {
+        ipcRenderer.send('index-out');
+        window.location.href = 'index.html';
+      }
+    });
 
     // Créez une fonction pour la recherche de contrat
     function searchContract(query) {
@@ -80,6 +94,18 @@
       searchContract('');
       document.getElementById('searchForm').reset();
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestClientName('');
+    });
+
+    function requestClientName() {
+      ipcRenderer.send('request-client-name');
+    }
+
+    ipcRenderer.on('client-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
   </script>
 </body>
 </html>

@@ -7,14 +7,21 @@ const fs = require('fs');
 let baseDir = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED API FEC FD';
 // Variable pour stocker le fichier Excel
 let xlsxFile = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED.xlsx';
+//Variable pour stocker le fichier Excel pour les règlements
+let xlsxFileReglement = 'C:\\Users\\alanf\\OneDrive\\Bureau\\PaiementContrat.xlsx';
 // Variable pour stocker le répertoire courant
-let currentDir = '';
+let currentDir = baseDir;
 // Variable pour stocker le répertoire du premier client pour la fusion
 let clientDirFusion1 = '';
-// Nombre maximum de caractères autorisés pour un nom de fichier
-const maxLength = 42;
+// Variable pour savoir s'il s'agit d'un règlement ou non
+let isReglement = false;
+// Variable pour stocker le type de document
+let typeContrat = '';
+// Variable pour savoir si on vient de index to ajout_doc
+let indexToAjoutDoc = false;
 
-function getRowCount(xlsxFile) {
+function getRowCount(xlsxFile, shitName) {
+
   // Check if file exists
   if (!fs.existsSync(xlsxFile)) {
     throw new Error('File not found');
@@ -22,10 +29,11 @@ function getRowCount(xlsxFile) {
 
   // Read the Excel file
   const workbook = xlsx.readFile(xlsxFile);
-  // Get the first sheet name
-  const sheetName = workbook.SheetNames[0];
-  // Get the first worksheet
-  const worksheet = workbook.Sheets[sheetName];
+
+  const worksheetName = workbook.SheetNames.find(sheetName => sheetName === shitName);
+
+  // Get the worksheet using the provided sheet name
+  const worksheet = workbook.Sheets[worksheetName];
 
   // Get the range of the worksheet to find the last used row
   const range = xlsx.utils.decode_range(worksheet['!ref']);
@@ -80,9 +88,11 @@ function capitalizeWords(str) {
 }
 
 ipcMain.on('request-client-name', (event) => {
-  const clientName = path.basename(currentDir);
-  const formattedClientName = capitalizeWords(clientName);
-  event.sender.send('client-name', formattedClientName);
+  if (!indexToAjoutDoc) {
+    const clientName = path.basename(currentDir);
+    const formattedClientName = capitalizeWords(clientName);
+    event.sender.send('client-name', formattedClientName);
+  }
 });
 
 ipcMain.on('request-doc-name', (event) => {
@@ -105,19 +115,22 @@ ipcMain.on('submit-particuliers', (event, data) => {
   const workbook = xlsx.readFile(xlsxFile);
 
   // Access the first worksheet
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  const worksheetName = workbook.SheetNames.find(sheetName => sheetName === 'Particuliers');
+  const worksheet = workbook.Sheets[worksheetName];
 
   // Store data in variables
   const nom = capitalizeWords(data.nom);
   const prenom = capitalizeWords(data.prenom);
   const telephone = data.telephone;
   const mail = data.mail;
-  const birthday = data.birthday;
+  const birthday = convertDateFormat(data.birthday);
   const city = capitalizeWords(data.city);
   const country = capitalizeWords(data.country);
   const post = data.post;
-  const job = capitalizeWords(data.job);
-  const date = data.date;
+  const job = data.job;
+  // Get current date and time
+  var now = new Date();
+  var date = now.toLocaleDateString();
 
   // Check for duplicate entries
   const duplicateFound = Object.values(worksheet).some((row, index) => {
@@ -132,10 +145,8 @@ ipcMain.on('submit-particuliers', (event, data) => {
   });
 
   if (!duplicateFound) {
-
     // Numéro de la ligne à mettre à jour dans le fichier Excel
-    let rowNumber = getRowCount(xlsxFile);
-    console.log('Row number:', rowNumber);
+    let rowNumber = getRowCount(xlsxFile, worksheetName);
 
     // Define the row number and new data for the row (1-based index)
     const newRowData = {
@@ -163,12 +174,91 @@ ipcMain.on('submit-particuliers', (event, data) => {
       e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
     });
 
+    // Define the column widths (in characters)
+    const columnWidths = [
+      { wch: 17 }, // Column A
+      { wch: 17 }, // Column B
+      { wch: 14 }, // Column C
+      { wch: 27 }, // Column D
+      { wch: 18 }, // Column E
+      { wch: 17 }, // Column F
+      { wch: 16 }, // Column G
+      { wch: 14 }, // Column H
+      { wch: 29 },  // Column I
+      { wch: 13 }  // Column J
+    ];
+
+    // Set the column widths for the worksheet
+    worksheet['!cols'] = columnWidths;
+
     // Save the updated workbook
     xlsx.writeFile(workbook, xlsxFile);
   }
 
   event.sender.send('folder-created', 'particuliers');
 });
+
+function convertDateFormat(dateString) {
+  if (!dateString) {
+    return '';
+  }
+
+  // Split the date string into an array of parts
+  var parts = dateString.split("-");
+
+  const partsCount = parts.length;
+
+  if (partsCount === 2) {
+    switch (parts[1]) {
+      case '01':
+        parts[1] = 'Janvier';
+        break;
+      case '02':
+        parts[1] = 'Février';
+        break;
+      case '03':
+        parts[1] = 'Mars';
+        break;
+      case '04':
+        parts[1] = 'Avril';
+        break;
+      case '05':
+        parts[1] = 'Mai';
+        break;
+      case '06':
+        parts[1] = 'Juin';
+        break;
+      case '07':
+        parts[1] = 'Juillet';
+        break;
+      case '08':
+        parts[1] = 'Août';
+        break;
+      case '09':
+        parts[1] = 'Septembre';
+        break;
+      case '10':
+        parts[1] = 'Octobre';
+        break;
+      case '11':
+        parts[1] = 'Novembre';
+        break;
+      case '12':
+        parts[1] = 'Décembre';
+        break;
+      default:
+        break;
+    }
+    // Rearrange the parts and join them with "/"
+    var newDateString = parts[1] + " " + parts[0];
+  } else {
+    // Rearrange the parts and join them with "/"
+    var newDateString = parts[2] + "/" + parts[1] + "/" + parts[0];
+  }
+  // Return the new date string
+  return newDateString;
+}
+
 
 // Handle form submission for "Pro"
 ipcMain.on('submit-pro', (event, data) => {
@@ -178,6 +268,81 @@ ipcMain.on('submit-pro', (event, data) => {
     fs.mkdirSync(dir);
   }
   currentDir = dir;
+
+  // Load the existing workbook
+  const workbook = xlsx.readFile(xlsxFile);
+
+  // Access the first worksheet
+  let worksheetName = workbook.SheetNames.find(sheetName => sheetName === 'Professionnels');
+
+  if (!worksheetName) {
+
+    // Create a new worksheet with the date as the name
+    const newWorksheet = xlsx.utils.aoa_to_sheet([
+      ['Nom de la société', "Date d'arrivée"]
+    ]);
+  
+    // Append the new worksheet to the existing workbook
+    xlsx.utils.book_append_sheet(workbook, newWorksheet, 'Professionnels');
+  
+    // Save the updated workbook
+    xlsx.writeFile(workbook, xlsxFile);
+    worksheetName = workbook.SheetNames.find(sheetName => sheetName === 'Professionnels');
+  }
+
+  const worksheet = workbook.Sheets[worksheetName];
+
+  // Store data in variables
+  const nom = capitalizeWords(data.numeroSociete);
+  // Get current date and time
+  var now = new Date();
+  var date = now.toLocaleDateString();
+
+  // Check for duplicate entries
+  const duplicateFound = Object.values(worksheet).some((row, index) => {
+    if (index === 0) return false; // Ignore the header row
+    const cellA = worksheet[xlsx.utils.encode_cell({r: index, c: 0})];
+    if (cellA && cellA.v) {
+      return cellA.v.toUpperCase() === nom.toUpperCase();
+    }
+    return false;
+  });
+
+  if (!duplicateFound) {
+    // Numéro de la ligne à mettre à jour dans le fichier Excel
+    let rowNumber = getRowCount(xlsxFile, worksheetName);
+
+    // Define the row number and new data for the row (1-based index)
+    const newRowData = {
+      A: nom,
+      B: date
+    };
+
+    // Update the row data
+    Object.keys(newRowData).forEach((column) => {
+      const cellAddress = column + rowNumber;
+      worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+    });
+
+    // Update the worksheet range
+    worksheet['!ref'] = xlsx.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+    });
+
+    // Define the column widths (in characters)
+    const columnWidths = [
+      { wch: 21 }, // Column A
+      { wch: 17 } // Column B
+    ];
+
+    // Set the column widths for the worksheet
+    worksheet['!cols'] = columnWidths;
+
+    // Save the updated workbook
+    xlsx.writeFile(workbook, xlsxFile);
+  }
+
   event.sender.send('folder-created', 'pro');
 });
 
@@ -200,15 +365,21 @@ ipcMain.on('submit-auto', (event, data) => {
 
 // Handle form submission for "Habitation"
 ipcMain.on('submit-habitation', (event, data) => {
-  const numeroRue = data.numeroRue.toUpperCase() || '';
-  const typeRue = data.typeRue.toUpperCase() || '';
-  const nomRue = data.nomRue.toUpperCase() || '';
+  typeContrat = data.typeDocument;
+
+  const adresse = data.adresse.toUpperCase() || '';
   const codePostal = data.codePostal.toUpperCase() || '';
   const ville = data.ville.toUpperCase() || '';
   const numeroContrat = data.numeroContrat.toUpperCase() || '';
 
-  const subDirParts = [numeroRue, typeRue, nomRue, codePostal, ville, numeroContrat].filter(Boolean);
-  const subDirName = `MRH ${subDirParts.join(' ')}`;
+  const subDirParts = [adresse, codePostal, ville, numeroContrat].filter(Boolean);
+  let subDirName = ``;
+
+  if (typeContrat === 'habitation') {
+    subDirName = `MRH ${subDirParts.join(' ')}`;
+  } else if (typeContrat === 'mrp'){
+    subDirName = `MRP ${subDirParts.join(' ')}`;
+  }
   const subDir = path.join(currentDir, subDirName);
 
   if (!fs.existsSync(subDir)) {
@@ -293,9 +464,6 @@ ipcMain.on('select-client-fusion', (event, client) => {
   const selectedClient = client.selectedClient.toUpperCase();
   const clientDir = path.join(baseDir, selectedClient);
 
-  console.log('Client directory:', clientDir);
-  console.log('Selected client:', selectedClient);
-
   // Check if the client directory exists
   if (fs.existsSync(clientDir)) {
     // Store the selected client directory in local storage for fusion
@@ -313,7 +481,6 @@ ipcMain.on('select-client', (event, client) => {
   if (selectedClient.includes('...')) {
     // Remove the ellipsis from the selected client
     selectedClient = selectedClient.substring(0, selectedClient.length - 3);
-    console.log('Selected client1:', selectedClient);
     for (const directory of fs.readdirSync(baseDir)) {
       if (directory.includes(selectedClient)) {
         selectedClient = directory;
@@ -339,55 +506,72 @@ ipcMain.on('select-client', (event, client) => {
   // Set the current directory to the client directory
   currentDir = clientDir;
   // Send a message to the renderer process indicating that the client has been selected
-  event.sender.send('client-selected');
+  event.sender.send('client-selected', isReglement);
 });
 
 // Handle contract search
 ipcMain.on('search-contract', (event, query) => {
   const results = [];
-  const clientDirs = fs.readdirSync(baseDir);
 
-  clientDirs.forEach(clientDir => {
-    if (clientDir.includes('&')) {
-      const clientSubDirs = fs.readdirSync(path.join(baseDir, clientDir));
-      clientSubDirs.forEach(clientSubDir => {
-        const clientPath = path.join(baseDir, clientDir, clientSubDir);
+  if (isReglement) {
+    const contractDirs = fs.readdirSync(currentDir);
+    contractDirs.forEach(contractDir => {
+      const contractPath = path.join(currentDir, contractDir);
+        if (fs.statSync(contractPath).isDirectory()) {
+          const parts = contractDir.split(' ');
+          const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+          if (contractNumber.startsWith(query)) {
+            //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
+            //results.push(contractDirName);
+            results.push(contractDir);
+          }
+        }
+    });
+  }
+  else {
+    const clientDirs = fs.readdirSync(baseDir);
+    clientDirs.forEach(clientDir => {
+      if (clientDir.includes('&')) {
+        const clientSubDirs = fs.readdirSync(path.join(baseDir, clientDir));
+        clientSubDirs.forEach(clientSubDir => {
+          const clientPath = path.join(baseDir, clientDir, clientSubDir);
+
+          if (fs.statSync(clientPath).isDirectory()) {
+            const contractDirs = fs.readdirSync(clientPath);
+
+            contractDirs.forEach(contractDir => {
+              const parts = contractDir.split(' ');
+              const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+              if (contractNumber.startsWith(query)) {
+                //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
+                //results.push(contractDirName);
+                results.push(contractDir);
+              }
+            });
+          }
+        });
+      } else {
+        const clientPath = path.join(baseDir, clientDir);
 
         if (fs.statSync(clientPath).isDirectory()) {
           const contractDirs = fs.readdirSync(clientPath);
 
           contractDirs.forEach(contractDir => {
-            const parts = contractDir.split(' ');
-            const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
-            if (contractNumber.startsWith(query)) {
-              //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
-              //results.push(contractDirName);
-              results.push(contractDir);
+            const contractPath = path.join(clientPath, contractDir);
+            if (fs.statSync(contractPath).isDirectory()) {
+              const parts = contractDir.split(' ');
+              const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+              if (contractNumber.startsWith(query)) {
+                //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
+                //results.push(contractDirName);
+                results.push(contractDir);
+              }
             }
           });
         }
-      });
-    } else {
-      const clientPath = path.join(baseDir, clientDir);
-
-      if (fs.statSync(clientPath).isDirectory()) {
-        const contractDirs = fs.readdirSync(clientPath);
-
-        contractDirs.forEach(contractDir => {
-          const contractPath = path.join(clientPath, contractDir);
-          if (fs.statSync(contractPath).isDirectory()) {
-            const parts = contractDir.split(' ');
-            const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
-            if (contractNumber.startsWith(query)) {
-              //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
-              //results.push(contractDirName);
-              results.push(contractDir);
-            }
-          }
-        });
       }
-    }
-  });
+    });
+  }
   event.sender.send('search-results', results);
 });
 
@@ -462,7 +646,7 @@ ipcMain.on('submit-documents', (event, files) => {
   for (const doc in files) {
     const file = files[doc];
     try {
-      const filePath = path.join(currentDir, `${doc} - ${file.name}`);
+      const filePath = path.join(currentDir, `${doc} ${file.name}`);
       fs.writeFileSync(filePath, file.data);
     } catch (error) {
       console.error(`Erreur lors de l'enregistrement du fichier ${file.name}:`, error);
@@ -571,3 +755,238 @@ function unmergeDirectory(dir) {
   // Supprimer le dossier dir
   fs.rmdirSync(dir);
 }
+ipcMain.on('sante-tns-selected', () => {
+  productDir = 'SANTE_TNS';
+  typeContrat = 'sante_tns';
+});
+
+ipcMain.on('sante-selected', () => {
+  productDir = 'SANTE';
+  typeContrat = 'sante';
+});
+
+ipcMain.on('sante-collective-selected', () => {
+  productDir = 'SANTE_COLL';
+  typeContrat = 'sante_coll';
+});
+
+ipcMain.on('prevention-tns-selected', () => {
+  productDir = 'PREV_TNS';
+  typeContrat = 'prev_tns';
+});
+
+ipcMain.on('prevention-collective-selected', () => {
+  productDir = 'PREV_COLL';
+  typeContrat = 'prev_coll';
+});
+
+ipcMain.on('submit-sante-prev', (event, data) => {
+
+  const numeroContrat = data.numeroContrat.toUpperCase() || '';
+
+  const subDirParts = [numeroContrat].filter(Boolean);
+  let subDirName = ``;
+
+  switch (typeContrat) {
+    case 'sante_tns':
+      subDirName = `SANTE_TNS ${subDirParts.join(' ')}`;
+      break;
+    case 'sante':
+      subDirName = `SANTE ${subDirParts.join(' ')}`;
+      break;
+    case 'sante_coll':
+      subDirName = `SANTE_COLL ${subDirParts.join(' ')}`;
+      break;
+    case 'prev_tns':
+      subDirName = `PREV_TNS ${subDirParts.join(' ')}`;
+      break;
+    case 'prev_coll':
+      subDirName = `PREV_COLL ${subDirParts.join(' ')}`;
+      break;
+    default:
+      // Handle other cases here
+      break;
+  }
+  const subDir = path.join(currentDir, subDirName);
+
+  if (!fs.existsSync(subDir)) {
+    fs.mkdirSync(subDir);
+  }
+
+  currentDir = subDir;
+  event.sender.send('sante-prev-folder-created', typeContrat);
+});
+
+// Handle request for client data
+ipcMain.on('request-client-data', (event) => {
+  const workbook = xlsx.readFile(xlsxFile);
+  const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+  const rows = [];
+  const clientName = path.basename(currentDir);
+
+  let nameArray = clientName.split(" "); // This will create an array: ["Nom", "Prenom"]
+
+  let nom = capitalizeWords(nameArray[0]); // This will give you the first name: "Nom"
+  let prenom = capitalizeWords(nameArray[1]); // This will give you the last name: "Prenom"
+
+  // Obtient les limites de la feuille de calcul
+  const range = xlsx.utils.decode_range(worksheet['!ref']);
+
+  for (let rowNum = 1; rowNum <= range.e.r + 1; rowNum++) { // range.e.r est en base 0, donc on ajoute 1
+    const row = {};
+    for (let colNum = 0; colNum <= range.e.c; colNum++) {
+      const cellAddress = { c: colNum, r: rowNum };
+      const cell = worksheet[xlsx.utils.encode_cell(cellAddress)];
+      const columnName = worksheet[xlsx.utils.encode_cell({ c: colNum, r: 0 })].v; // Header row is at r: 0
+      row[columnName] = cell ? cell.v : '';
+    }
+    if (row.Nom && row.Nom.toLowerCase() === nom.toLowerCase() && row.Prénom && row.Prénom.toLowerCase() === prenom.toLowerCase()) {
+      rows.push(row);
+    }
+  }
+  event.sender.send('client-data', rows);
+});
+
+// Handle form submission for "Reglement Submission"
+ipcMain.on('submit-reglement', (event, data) => {
+  const nomClient = path.basename(path.dirname(currentDir));
+  const contractDir = path.basename(currentDir);
+  const words = contractDir.split(" ");
+  const numeroContrat = words[words.length - 1];
+
+  const beneficiaire = data.beneficiaire.toUpperCase();
+  let nomBeneficiaire = '';
+
+  if (beneficiaire === 'CABINET') {
+    const cabinet = data.cabinet.toUpperCase();
+    const banque = data.banque.toUpperCase();
+    nomBeneficiaire = cabinet + ' ' + banque;
+  } else if (beneficiaire === 'COMPAGNIE') {
+    nomBeneficiaire = data.compagnie.toUpperCase();
+  }
+
+  var now = new Date();
+  var dateReglement = now.toLocaleDateString();
+
+  const montant = data.montant;
+  const typePaiement = data.typePaiement.toUpperCase();
+  const remarques = data.remarques;
+  const date = convertDateFormat(data.date);
+
+  // Load the existing workbook
+  const workbook = xlsx.readFile(xlsxFileReglement);
+
+  // Access the worksheet with the name stored in the date variable
+  let worksheetName = workbook.SheetNames.find(sheetName => sheetName === date);
+
+  if (!worksheetName) {
+
+    // Create a new worksheet with the date as the name
+    const newWorksheet = xlsx.utils.aoa_to_sheet([
+      ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
+    ]);
+  
+    // Append the new worksheet to the existing workbook
+    xlsx.utils.book_append_sheet(workbook, newWorksheet, date);
+  
+    // Save the updated workbook
+    xlsx.writeFile(workbook, xlsxFileReglement);
+    worksheetName = workbook.SheetNames.find(sheetName => sheetName === date);
+  }
+  const worksheet = workbook.Sheets[worksheetName];
+
+  // Check for duplicate entries
+  const duplicateFound = Object.values(worksheet).some((row, index) => {
+    if (index === 0) return false; // Ignore the header row
+    const cellF = worksheet[xlsx.utils.encode_cell({r: index, c: 5})];
+    if (cellF && cellF.v) {
+      return cellF.v.toUpperCase() === numeroContrat.toUpperCase();
+    }
+    return false;
+  });
+
+  if (!duplicateFound) {
+
+    // Numéro de la ligne à mettre à jour dans le fichier Excel
+    let rowNumber = getRowCount(xlsxFileReglement, worksheetName);
+
+    // Define the row number and new data for the row (1-based index)
+    const newRowData = {
+      A: nomClient,
+      B: beneficiaire,
+      C: nomBeneficiaire,
+      D: dateReglement,
+      E: montant,
+      F: numeroContrat,
+      G: typeContrat,
+      H: typePaiement,
+      I: remarques
+    };
+
+    // Update the row data
+    Object.keys(newRowData).forEach((column) => {
+      const cellAddress = column + rowNumber;
+      worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+    });
+
+    // Update the worksheet range
+    worksheet['!ref'] = xlsx.utils.encode_range({
+      s: { r: 0, c: 0 },
+      e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+    });
+
+    // Define the column widths (in characters)
+    const columnWidths = [
+      { wch: 20 }, // Column A
+      { wch: 20 }, // Column B
+      { wch: 20 }, // Column C
+      { wch: 20 }, // Column D
+      { wch: 15 }, // Column E
+      { wch: 17 }, // Column F
+      { wch: 15 }, // Column G
+      { wch: 17 }, // Column H
+      { wch: 21 }  // Column I
+    ];
+
+    // Set the column widths for the worksheet
+    worksheet['!cols'] = columnWidths;
+
+    // Save the updated workbook
+    xlsx.writeFile(workbook, xlsxFileReglement);
+  }
+
+  isReglement = false;
+  event.sender.send('reglement-termine');
+});
+
+ipcMain.on('type-document-maj', (event, type) => {
+  typeContrat = type;
+  event.sender.send('type-document-maj-done');
+});
+
+ipcMain.on('reglement-in', (event) => {
+  isReglement = true;
+  event.sender.send('reglement-in-done', isReglement);
+});
+
+ipcMain.on('reglement-out', (event) => {
+  isReglement = false;
+  event.sender.send('reglement-out-done', isReglement);
+});
+
+ipcMain.on('get-reglement', (event) => {
+  event.sender.send('get-reglement-done', isReglement);
+});
+
+ipcMain.on('get-parent-dir', () => {
+  currentDir = path.dirname(currentDir);
+});
+
+ipcMain.on('index-to-ajout-doc', (event) => {
+  indexToAjoutDoc = true;
+  event.sender.send('index-to-ajout-doc-done');
+});
+
+ipcMain.on('index-out', (event) => {
+  indexToAjoutDoc = false;
+});

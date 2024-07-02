@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Informations Règlement</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="particuliers.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <h1>Veuillez fournir les informations du règlement</h1>
+  <form id="reglementForm">
+    <label for="beneficiaire">Bénéficiaire du virement :</label>
+    <select name="beneficiaire" id="beneficiaire" required>
+      <option value="">-- Veuillez choisir une option --</option>
+      <option value="Cabinet">Cabinet</option>
+      <option value="Compagnie">Compagnie</option>
+    </select><span style="display: block;"><br></span>
+
+    <label for="compagnie" id="compagnie-label" style="display: none;">Nom de la compagnie :</label>
+    <select name="compagnie" id="compagnie" style="display: none;"required>
+      <option value="">-- Veuillez choisir une compagnie --</option>
+      <option value="ALLIANZ">ALLIANZ</option>
+      <option value="AMLIN">AMLIN</option>
+      <option value="APICIL">APICIL</option>
+      <option value="APRIL">APRIL</option>
+      <option value="ASSURBIKE">ASSURBIKE</option>
+      <option value="AXA">AXA</option>
+      <option value="BCA">BCA</option>
+      <option value="CSCA">CSCA</option>
+      <option value="CIVIS">CIVIS</option>
+      <option value="COVEA">COVEA</option>
+      <option value="DIF">DIF</option>
+      <option value="ENTORIA">ENTORIA</option>
+      <option value="EUROP ASSISTANCE">EUROP ASSISTANCE</option>
+      <option value="FMA">FMA</option>
+      <option value="FORTIS">FORTIS</option>
+      <option value="GENERALI">GENERALI</option>
+      <option value="GAN">GAN</option>
+      <option value="GROUPAMA">GROUPAMA</option>
+      <option value="GROUPE MORNAY">GROUPE MORNAY</option>
+      <option value="HISCOX">HISCOX</option>
+      <option value="LEADER SOUSCRIPTION">LEADER SOUSCRIPTION</option>
+      <option value="MALAKOFF HUMANIS">MALAKOFF HUMANIS</option>
+      <option value="MAXANCE">MAXANCE</option>
+      <option value="METLIFE">METLIFE</option>
+      <option value="MMA">MMA</option>
+      <option value="MONDIAL ASSISTANCE">MONDIAL ASSISTANCE</option>
+      <option value="NETVOX">NETVOX</option>
+      <option value="NOVELIA">NOVELIA</option>
+      <option value="SOLLY AZAR">SOLLY AZAR</option>
+      <option value="SQUADRA ASSURANCE">SQUADRA ASSURANCE</option>
+      <option value="SWISS LIFE">SWISS LIFE</option>
+    </select><span id="compagnie-br" style="display: none;"><br></span>
+
+    <label for="cabinet" id="cabinet-label" style="display: none;">Nom du cabinet :</label>
+    <select name="cabinet" id="cabinet" style="display:none;" required>
+      <option value="">-- Veuillez choisir un cabinet --</option>
+      <option value="API">API</option>
+      <option value="FD">FD</option>
+      <option value="FEC">FEC</option>
+    </select><span id="cabinet-br" style="display: none;"><br></span>
+
+    <label for="banque" id="banque-label" style="display: none;">Nom de la banque :</label>
+    <select name="banque" id="banque" style="display: none;" required>
+      <option value="">-- Veuillez choisir une banque --</option>
+      <option value="BNP">BNP</option>
+      <option value="CAISSE D'ÉPARGNE">CAISSE D'ÉPARGNE</option>
+      <option value="CRÉDIT AGRICOLE">CRÉDIT AGRICOLE</option>
+      <option value="LCL">LCL</option>
+    </select><span id="banque-br" style="display: none;"><br></span>
+
+    <label for="montant">Montant du virement :</label>
+    <input type="number" step="0.01" min="0" max="1000000" id="montant" name="montant" required/><br><br>
+    <label for="type-paiement">Type de paiement :</label>
+    <select id="type-paiement" name="type-paiement" required>
+      <option value="">-- Choix --</option>
+      <option value="Virement">Virement</option>
+      <option value="Chèque">Chèque</option>
+      <option value="TIP">TIP</option>
+    </select><br><br>
+    <label for="remarques">Remarques :</label>
+    <input type="text" id="remarques" name="remarques"></input><br><br>
+    <label for="date">Date :</label>
+    <input type="month" id="date" name="date"><br><br>
+    <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="submit" class="submit-button" id="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+  </form>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function retourNouveauClient() {
+      window.location.href = 'documents_choix.html';
+    }
+
+    document.getElementById('submit-button').addEventListener('click', function() {
+      event.preventDefault();
+      const beneficiaire = document.getElementById('beneficiaire').value;
+      const cabinet = document.getElementById('cabinet').value;
+      const banque = document.getElementById('banque').value;
+      const compagnie= document.getElementById('compagnie').value;
+      const montant = document.getElementById('montant').value;
+      const typePaiement = document.getElementById('type-paiement').value;
+      const remarques = document.getElementById('remarques').value;
+      const date = document.getElementById('date').value;
+
+      if (beneficiaire === 'Cabinet') {
+        ipcRenderer.send('submit-reglement', {
+          beneficiaire,
+          cabinet,
+          banque,
+          montant,
+          typePaiement,
+          remarques,
+          date
+        });
+      } else if (beneficiaire === 'Compagnie') {
+        ipcRenderer.send('submit-reglement', {
+          beneficiaire,
+          compagnie,
+          montant,
+          typePaiement,
+          remarques,
+          date
+        });
+      }
+    });
+
+    function fermerCabinet() {
+      document.getElementById("cabinet").style.display = "none";
+      document.getElementById("cabinet-label").style.display = "none";
+      document.getElementById("banque").style.display = "none";
+      document.getElementById("banque-br").style.display = "none";
+      document.getElementById("banque-label").style.display = "none";
+      document.getElementById("cabinet-br").style.display = "none";
+      document.getElementById("banque").value = "";
+      document.getElementById("cabinet").value = "";
+    }
+
+    function fermerCompagnie() {
+      document.getElementById("compagnie").style.display = "none";
+      document.getElementById("compagnie-label").style.display = "none";
+      document.getElementById("compagnie-br").style.display = "none";
+      document.getElementById("compagnie").value = "";
+    }
+
+    beneficiaire.addEventListener("change", function() {
+      if (this.value === "Cabinet") {
+        document.getElementById("cabinet").style.display = "inline-block";
+        document.getElementById("cabinet-label").style.display = "inline-block";
+        document.getElementById("cabinet-br").style.display = "block";
+        fermerCompagnie();
+      } else if (this.value === "Compagnie") {
+        document.getElementById("compagnie").style.display = "inline-block";
+        document.getElementById("compagnie-label").style.display = "inline-block";
+        document.getElementById("compagnie-br").style.display = "block";
+        fermerCabinet();
+      } else {
+        fermerCabinet();
+        fermerCompagnie();
+      }
+    });
+
+    cabinet.addEventListener("change", function() {
+      if (this.value === "API" || this.value === "FD" || this.value === "FEC") {
+        document.getElementById("banque").style.display = "inline-block";
+        document.getElementById("banque-label").style.display = "inline-block";
+        document.getElementById("banque-br").style.display = "block";
+        document.getElementById("cabinet-br").style.display = "block";
+      } else {
+        document.getElementById("banque").style.display = "none";
+        document.getElementById("banque-label").style.display = "none";
+        document.getElementById("banque-br").style.display = "none";
+        document.getElementById("banque").value = "";
+      }
+    });
+
+    ipcRenderer.on('reglement-termine', (event) => {
+      window.location.href = 'index.html';
+    });
+  </script>
+</body>
+</html>

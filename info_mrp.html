@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Informations Habitation</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Informations du logement</h1>
+    <form id="habitationForm">
+        <label for="adresse">Adresse :</label>
+        <input type="text" id="adresse" name="adresse" autofocus placeholder="3 rue des Potiers"><br><br>
+    
+        <label for="codePostal">Code Postal :</label>
+        <input type="text" id="codePostal" name="codePostal" placeholder="92260"><br><br>
+    
+        <label for="ville">Ville :</label>
+        <input type="text" id="ville" name="ville" placeholder="Fontenay-aux-Roses"><br><br>
+    
+        <label for="numeroContrat">Numéro de contrat :</label>
+        <input type="text" id="numeroContrat" name="numeroContrat" placeholder="123456789" required><br><br>
+    
+        <button type="button" class="back-button" onclick="retourProduits()"><i class="fas fa-arrow-left"></i> Retour</button>
+        <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        function retourProduits() {
+            window.location.href = 'produits.html';
+        }
+
+        document.getElementById('habitationForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const typeDocument = 'mrp';
+
+            const adresse = document.getElementById('adresse').value;
+            const codePostal = document.getElementById('codePostal').value;
+            const ville = document.getElementById('ville').value;
+            const numeroContrat = document.getElementById('numeroContrat').value;
+
+            ipcRenderer.send('submit-habitation', {
+                typeDocument,
+                adresse,
+                codePostal,
+                ville,
+                numeroContrat
+            });
+        });
+
+
+      ipcRenderer.on('habitation-folder-created', () => {
+        window.location.href = 'documents_mrp.html';
+      });
+    </script>
+  </body>
+</html>

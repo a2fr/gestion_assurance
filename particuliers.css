@@ -1,13 +1,20 @@
-#particuliersForm input[type="text"] {
-    height: 30px;
-    padding: 2px 5px;
-  }
+input {
+  height: 30px;
+  padding: 2px 5px;
+}
   
-  #particuliersForm label,
-  #particuliersForm input[type="text"] {
-    font-size: 21px;
-  }
+label,
+input {
+  font-size: 21px;
+}
   
-  label {
-    width: 260px;
-  }
+label {
+  width: 260px;
+}
+
+select {
+  height: 30px;
+  padding: 2px 5px;
+  font-size: 17px;
+  margin-left: 10px;
+}

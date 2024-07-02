@@ -22,8 +22,15 @@
     const { ipcRenderer } = require('electron');
 
     function retourIndex() {
-      window.location.href = 'index.html';
+      ipcRenderer.send('get-reglement');
     }
+
+    ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+      if (isReglement === true)
+        window.location.href = 'reglement.html';
+      else
+        window.location.href = 'index.html';
+    });
 
     // Créez une fonction pour la recherche de client
     function searchClient(query) {
@@ -72,15 +79,18 @@
       ipcRenderer.send('select-client', { selectedClient });
     });
 
-    ipcRenderer.on('client-selected', (event, type) => {
-      window.location.href = 'type_client_choix.html';
-    });
-
     function clearSearch() {
       document.getElementById('searchInput').value = '';
       searchClient('');
       document.getElementById('searchForm').reset();
     }
+
+    ipcRenderer.on('client-selected', (event, isReglement) => {
+      if (isReglement === true)
+        window.location.href = 'ajout_doc.html';
+      else
+        window.location.href = 'type_client_choix.html';
+    });
   </script>
 </body>
 </html>

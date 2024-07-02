@@ -92,35 +92,45 @@
     });
 
     ipcRenderer.on('files-uploaded', (event, type) => {
-      window.location.href = 'index.html';
+      ipcRenderer.send('get-reglement');
+    });
+
+    ipcRenderer.on('get-reglement-done', (event, reglement) => {
+      const isReglement = reglement;
+      if (isReglement) {
+        ipcRenderer.send('type-document-maj', 'auto');
+      } else {
+        ipcRenderer.send('index-out');
+        window.location.href = 'index.html';
+      }
+    });
+
+    ipcRenderer.on('type-document-maj-done', () => {
+      window.location.href = 'reglement_excel.html';
     });
 
     document.getElementById('addRowBtn').addEventListener('click', function() {
-      // Create a new row and cells
-      var newRow = document.createElement('tr');
-      var docCell = document.createElement('td');
-      var uploadCell = document.createElement('td');
+      const newRow = document.createElement('tr');
+      const docCell = document.createElement('td');
+      const uploadCell = document.createElement('td');
 
-      // Create a new input for the document name
-      var docInput = document.createElement('input');
+      const docInput = document.createElement('input');
       docInput.type = 'text';
       docInput.placeholder = 'Nom du document';
+      docInput.addEventListener('input', function() {
+        uploadInput.dataset.doc = docInput.value;
+      });
 
-      // Create a new input for the document file
-      var fileInput = document.createElement('input');
-      fileInput.type = 'file';
-      fileInput.id = `upload-new-doc`;
-      fileInput.dataset.doc = `new-doc`;
+      const uploadInput = document.createElement('input');
+      uploadInput.type = 'file';
+      uploadInput.dataset.doc = 'new-doc';
 
-      // Add the inputs to the cells
       docCell.appendChild(docInput);
-      uploadCell.appendChild(fileInput);
+      uploadCell.appendChild(uploadInput);
 
-      // Add the cells to the row
       newRow.appendChild(docCell);
       newRow.appendChild(uploadCell);
 
-      // Add the row to the table
       document.getElementById('document-table-body').appendChild(newRow);
     });
 

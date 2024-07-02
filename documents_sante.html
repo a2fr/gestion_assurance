@@ -22,12 +22,20 @@
     </thead>
     <tbody id="document-table-body">
       <tr>
-        <td>Bail</td>
-        <td><input type="file" id="upload-bail" data-doc="bail"></td>
-      </tr>
-      <tr>
         <td>CNI</td>
         <td><input type="file" id="upload-cni" data-doc="cni"></td>
+      </tr>
+      <tr>
+        <td>KBIS</td>
+        <td><input type="file" id="upload-kbis" data-doc="kbis"></td>
+      </tr>
+      <tr>
+        <td>Attestation de sécurité</td>
+        <td><input type="file" id="upload-secu" data-doc="secu"></td>
+      </tr>
+      <tr>
+        <td>RIB</td>
+        <td><input type="file" id="upload-rib" data-doc="rib"></td>
       </tr>
       <tr>
         <td>Devis</td>
@@ -37,14 +45,6 @@
         <td>Contrat</td>
         <td><input type="file" id="upload-contrat" data-doc="contrat"></td>
       </tr>
-      <tr>
-        <td>RIB</td>
-        <td><input type="file" id="upload-rib" data-doc="rib"></td>
-      </tr>
-      <tr class="kbisRow">
-        <td>KBIS</td>
-        <td><input type="file" id="upload-kbis" data-doc="kbis"></td>
-      </tr>  
     </tbody>
   </table>
   <br>
@@ -58,17 +58,6 @@
     function openFileManager() {
       ipcRenderer.send('open-file-manager');
     }
-
-    function toggleKbisRow() {
-      const kbisRow = document.querySelector('#document-table-body tr:last-child');
-      isPro = window.localStorage.getItem('isPro');
-      if (isPro === 'false') {
-        kbisRow.style.display = 'none';
-      }
-    }
-
-    // Exécuter la fonction toggleKbisRow() lorsque le DOM est entièrement chargé
-    document.addEventListener('DOMContentLoaded', toggleKbisRow);
 
     document.getElementById('docForm').addEventListener('click', async function() {
       const files = {};
@@ -93,7 +82,7 @@
     ipcRenderer.on('get-reglement-done', (event, reglement) => {
       const isReglement = reglement;
       if (isReglement) {
-        ipcRenderer.send('type-document-maj', 'habitation');
+        ipcRenderer.send('type-document-maj', 'sante');
       } else {
         ipcRenderer.send('index-out');
         window.location.href = 'index.html';
@@ -140,7 +129,6 @@
 
       document.getElementById('document-table-body').appendChild(newRow);
     });
-    
   </script>
 </body>
 </html>

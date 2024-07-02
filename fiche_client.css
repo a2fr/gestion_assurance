@@ -1,0 +1,17 @@
+p {
+    color: wheat;
+    font-size: x-large;
+}
+
+button {
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    height: auto;
+    width: auto;
+    border-radius: 17px;
+}
+
+button:active {
+    background-color: #3e8e41;
+}

@@ -37,6 +37,29 @@
         else if (selectedProducts.includes('HABITATION (MRH)')) {
           window.location.href = 'info_habitation.html';
         }
+        else if (selectedProducts.includes('MRP')) {
+          window.location.href = 'info_mrp.html';
+        }
+        else if (selectedProducts.includes('SANTE_TNS')) {
+          ipcRenderer.send('sante-tns-selected');
+          window.location.href = 'info_sante.html';
+        }
+        else if (selectedProducts.includes('SANTE')) {
+          ipcRenderer.send('sante-selected');
+          window.location.href = 'info_sante.html';
+        }
+        else if (selectedProducts.includes('SANTE COLLECTIVE')) {
+          ipcRenderer.send('sante-collective-selected');
+          window.location.href = 'info_sante.html';
+        }
+        else if (selectedProducts.includes('PREVENTION TNS')) {
+          ipcRenderer.send('prevention-tns-selected');
+          window.location.href = 'info_sante.html';
+        }
+        else if (selectedProducts.includes('PREVENTION COLLECTIVE')) {
+          ipcRenderer.send('prevention-collective-selected');
+          window.location.href = 'info_sante.html';
+        }
         else {
           alert('Produits sélectionnés: ' + selectedProducts.join(', '));
           // Ici, tu peux ajouter du code pour gérer les autres produits sélectionnés
@@ -44,6 +67,18 @@
       });
 
       document.querySelector('.home-button').addEventListener('click', function() {
+        ipcRenderer.send('get-reglement');
+      });
+
+      ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+        if (isReglement) {
+          ipcRenderer.send('reglement-out');
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
+
+      ipcRenderer.on('reglement-out-done', (event, isReglement) => {
         window.location.href = 'index.html';
       });
 

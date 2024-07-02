@@ -12,14 +12,28 @@
     <div class="button-container">
       <button class="color-button" onclick="nouveauClient()">Nouveau client</button>
       <button class="color-button" onclick="clientPortefeuille()">Client déjà en portefeuille</button>
+      <button class="color-button" onclick="reglement()">Règlement</button>
     </div>
     <div class="button-container">
       <button class="color-button" onclick="ajoutDocument()">Ajout de documents</button>
       <button class="color-button" onclick="fusion()">Fusion de dossier</button>
+      <button class="color-button" onclick="infosClient()">Infos client</button>
     </div>
     <button id="open-file-manager-btn" class="folder-button" onclick="openFileManager()"><i class="fa fa-folder"></i> Ouvrir le dossier en cours</button>
     <script>
       const { ipcRenderer } = require('electron');
+
+      function reglement() {
+        ipcRenderer.send('reglement-in');
+      }
+      
+      ipcRenderer.on('reglement-in-done', (event) => {
+        window.location.href = 'reglement.html';
+      });
+
+      function infosClient() {
+        window.location.href = 'infos_client.html';
+      }
 
       function openFileManager() {
         ipcRenderer.send('open-file-manager');
@@ -33,8 +47,12 @@
       }
 
       function ajoutDocument() {
-        window.location.href = 'ajout_doc.html';
+        ipcRenderer.send('index-to-ajout-doc');
       }
+
+      ipcRenderer.on('index-to-ajout-doc-done', (event) => {
+        window.location.href = 'ajout_doc.html';
+      });
 
       function fusion() {
         window.location.href = 'fusion.html';

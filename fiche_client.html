@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fiche client</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="particuliers.css">
+  <link rel="stylesheet" href="fiche_client.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body id="tout">
+  <h1>
+    <div id="variable-display"></div>
+  </h1>
+
+  <div id="client-data-display"></div>
+
+  <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+  <button type="button" class="home-button" onclick="retourHome()"><i class="fas fa-home"></i> Home</button>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    const clientName = document.getElementById('variable-display');
+
+    let textToCopy;
+    let copyButton;
+
+    function retourIndex() {
+      window.location.href = 'infos_client.html';
+    }
+
+    function retourHome() {
+      window.location.href = 'index.html';
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestClientName();
+      requestClientData();
+    });
+
+    function requestClientName() {
+      ipcRenderer.send('request-client-name');
+    }
+
+    function requestClientData() {
+      ipcRenderer.send('request-client-data');
+    }
+
+    ipcRenderer.on('client-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
+
+    ipcRenderer.on('client-data', (event, clientData) => {
+      const clientDataDisplay = document.getElementById('client-data-display');
+      let clientDataHTML = '';
+
+      clientData.forEach(data => {
+        clientDataHTML += `
+          <p><strong>Nom:</strong> <span id="copie-nom">${data['Nom']}</span><button type="button" id="copy-button-nom" onclick="copierNom()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Prénom:</strong> <span id="copie-prenom">${data['Prénom']}</span><button type="button" id="copy-button-prenom" onclick="copierPrenom()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Téléphone:</strong> <span id="copie-telephone">${data['Téléphone']}</span><button type="button" id="copy-button-telephone"onclick="copierTelephone()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Email:</strong> <span id="copie-mail">${data['Mail']}</span><button type="button" id="copy-button-mail" onclick="copierMail()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Date de naissance:</strong> <span id="copie-birthday">${data['Date de naissance']}</span><button type="button" id="copy-button-birthday" onclick="copierBirthday()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Ville de naissance:</strong> <span id="copie-city">${data['Ville de naissance']}</span><button type="button" id="copy-button-city" onclick="copierCity()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Pays de naissance:</strong> <span id="copie-country">${data['Pays de naissance']}</span><button type="button" id="copy-button-country" onclick="copierCountry()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Code postal de naissance:</strong> <span id="copie-post">${data['Code postal']}</span><button type="button" id="copy-button-post" onclick="copierPost()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>CSP:</strong> <span id="copie-job">${data['CSP']}</span><button type="button" id="copy-button-job" onclick="copierJob()"><i class="fas fa-copy"></i></button></p>
+          <p><strong>Date d'arrivée:</strong> <span id="copie-date">${data["Date"]}</span><button type="button" id="copy-button-date" onclick="copierDate()"><i class="fas fa-copy"></i></button></p>
+        `;
+      });
+
+      // Ajoutez le HTML généré à l'élément d'affichage
+      clientDataDisplay.innerHTML = clientDataHTML;
+    });
+
+    function copierNom() {
+      const copyText = document.getElementById("copie-nom");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierPrenom() {
+      const copyText = document.getElementById("copie-prenom");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierTelephone() {
+      const copyText = document.getElementById("copie-telephone");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierMail() {
+      const copyText = document.getElementById("copie-mail");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierBirthday() {
+      const copyText = document.getElementById("copie-birthday");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierCity() {
+      const copyText = document.getElementById("copie-city");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierCountry() {
+      const copyText = document.getElementById("copie-country");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierPost() {
+      const copyText = document.getElementById("copie-post");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierJob() {
+      const copyText = document.getElementById("copie-job");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+
+    function copierDate() {
+      const copyText = document.getElementById("copie-date");
+      const range = document.createRange();
+      range.selectNode(copyText);
+      window.getSelection().addRange(range);
+
+      try {
+        document.execCommand('copy');
+      } catch (err) {
+        console.error('Failed to copy text: ', err);
+      }
+
+      window.getSelection().removeAllRanges();
+    }
+  </script>
+</body>
+</html>

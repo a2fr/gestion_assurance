@@ -32,3 +32,17 @@ input[type="file"] {
 input:hover {
     background-color: dimgray;
 }
+.add-button {
+    background-color: olive;
+    color: aliceblue;
+    padding: 14px 20px;
+    margin: 8px 0;
+    cursor: pointer;
+    width: 80%;
+    height: auto;
+    transition: background-color 0.3s ease;
+}
+
+.add-button:hover {
+    background-color: darkgreen;
+}

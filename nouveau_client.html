@@ -11,8 +11,11 @@
     <h1>De quel type de client s'agit-il?</h1>
     <button class="color-button" onclick="ouvrirParticuliers()"><i class="fas fa-user"></i> Particulier</button>
     <button class="color-button" onclick="ouvrirPro()"><i class="fas fa-briefcase"></i> Pro</button>
+    <br>
     <button class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
     <script>
+      const { ipcRenderer } = require('electron');
+
       function ouvrirParticuliers() {
         window.location.href = 'particuliers.html';
       }
@@ -21,8 +24,16 @@
         window.location.href = 'pro.html';
       }
       function retourIndex() {
-        window.location.href = 'index.html';
+        ipcRenderer.send('get-reglement');
       }
+
+      ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+        if (isReglement) {
+          window.location.href = 'reglement.html';
+        } else {
+          window.location.href = 'index.html';
+        }
+      });
     </script>
   </body>
 </html>

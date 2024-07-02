@@ -24,31 +24,31 @@
   </style>
   <h1>De quel type de contrat s'agit-il?</h1>
   <h2><div id="variable-display"></div></h2>
-  <button class="color-button" onclick="window.location.href='documents_auto.html'">
+  <button class="color-button" onclick="button('auto')">
     <i class="fas fa-car"></i> Auto
   </button>
-  <button class="color-button" onclick="window.location.href='documents_habitation.html'">
+  <button class="color-button" onclick="button('habitation')">
     <i class="fas fa-home"></i> Habitation
   </button>
-  <button class="color-button" onclick="window.location.href='documents_mrp.html'">
+  <button class="color-button" onclick="button('mrp')">
     <i class="fas fa-file-invoice"></i> MRP
   </button>
-  <button class="color-button" onclick="window.location.href='documents_sante_tns.html'">
+  <button class="color-button" onclick="button('sante_tns')">
     <i class="fas fa-user-md"></i> Santé TNS
   </button>
-  <button class="color-button" onclick="window.location.href='documents_sante.html'">
+  <button class="color-button" onclick="button('sante')">
     <i class="fas fa-heartbeat"></i> Santé
   </button>
-  <button class="color-button" onclick="window.location.href='documents_sante_collective.html'">
+  <button class="color-button" onclick="button('sante_coll')">
     <i class="fas fa-users"></i> Santé collective
   </button>
-  <button class="color-button" onclick="window.location.href='documents_prevention_tns.html'">
+  <button class="color-button" onclick="button('prev_tns')">
     <i class="fas fa-user-shield"></i> Prévention TNS
   </button>
-  <button class="color-button" onclick="window.location.href='documents_prevention_collective.html'">
+  <button class="color-button" onclick="button('prev_coll')">
     <i class="fas fa-shield-alt"></i> Prévention collective
   </button>
-  <button class="color-button" onclick="window.location.href='documents_divers.html'">
+  <button class="color-button" onclick="button('divers')">
     <i class="fas fa-list"></i> Divers
   </button>
   <button type="button" class="red-back-button" onclick="retourIndex()">
@@ -57,12 +57,24 @@
   <script>
     const { ipcRenderer } = require('electron');
 
+    let isReglement;
+
     function retourIndex() {
-      window.location.href = 'ajout_doc.html';
+      if (isReglement) {
+        ipcRenderer.send('get-parent-dir');
+        window.location.href = 'ajout_doc.html';
+      } else {
+        window.location.href = 'ajout_doc.html';
+      }
     }
 
     document.addEventListener('DOMContentLoaded', function() {
       requestDocName('');
+      ipcRenderer.send('get-reglement');
+    });
+
+    ipcRenderer.on('get-reglement-done', (event, reglement) => {
+      isReglement = reglement;
     });
 
     function requestDocName() {
@@ -71,6 +83,74 @@
 
     ipcRenderer.on('doc-name', (event, variable) => {
       document.getElementById('variable-display').innerText = variable;
+    });
+
+    function button(type) {
+      if (!isReglement) {
+        switch (type) {
+          case 'auto':
+            window.location.href = 'documents_auto.html';
+            break;
+          case 'habitation':
+            window.location.href = 'documents_habitation.html';
+            break;
+          case 'mrp':
+            window.location.href = 'documents_mrp.html';
+            break;
+          case 'sante_tns':
+            window.location.href = 'documents_sante.html';
+            break;
+          case 'sante':
+            window.location.href = 'documents_sante.html';
+            break;
+          case 'sante_coll':
+            window.location.href = 'documents_sante_collective.html';
+            break;
+          case 'prev_tns':
+            window.location.href = 'documents_prev.html';
+            break;
+          case 'prev_coll':
+            window.location.href = 'documents_sante_collective.html';
+            break;
+          case 'divers':
+            window.location.href = 'documents_divers.html';
+            break;
+        }
+      } else {
+        switch (type) {
+          case 'auto':
+            ipcRenderer.send('type-document-maj', 'auto');
+            break;
+          case 'habitation':
+            ipcRenderer.send('type-document-maj', 'habitation');
+            break;
+          case 'mrp':
+            ipcRenderer.send('type-document-maj', 'mrp');
+            break;
+          case 'sante_tns':
+            ipcRenderer.send('type-document-maj', 'sante_tns');
+            break;
+          case 'sante':
+            ipcRenderer.send('type-document-maj', 'sante');
+            break;
+          case 'sante_coll':
+            ipcRenderer.send('type-document-maj', 'sante_coll');
+            break;
+          case 'prev_tns':
+            ipcRenderer.send('type-document-maj', 'prev_tns');
+            break;
+          case 'prev_coll':
+            ipcRenderer.send('type-document-maj', 'prev_coll');
+            break;
+          case 'divers':
+            ipcRenderer.send('type-document-maj', 'divers');
+            break;
+        }
+      }
+    }
+
+    ipcRenderer.on('type-document-maj-done', () => {
+      window.location.href = 'reglement_excel.html';
     });
   </script>
 </body>
