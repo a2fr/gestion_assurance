@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search Excel Data</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 90%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    tr:nth-child(odd) {
+      background-color: #f9f9f9;
+    }
+
+    .search-button {
+      background-color: #4CAF50;
+      color: white;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      width: auto;
+      height: auto;
+    }
+
+    .search-button:hover {
+      background-color: #45a049;
+    }
+
+    input[type="text"] {
+      height: 30px;
+      padding: 2px 5px;
+    }
+
+    .back-button {
+      position: relative;
+      left: 0;
+      right: 0;
+      bottom: 25%;
+    }
+  </style>
+</head>
+<body>
+  <input type="text" id="searchTerm" placeholder="Search...">
+  <button class="search-button" onclick="search()">Search</button>
+  <table id="resultsTable">
+    <thead>
+      <tr>
+        <th>Nom</th>
+        <th>Type du bénéficiaire</th>
+        <th>Nom du bénéficiaire</th>
+        <th>Date de saisie</th>
+        <th>Date de règlement</th>
+        <th>Montant</th>
+        <th>Numéro de contrat</th>
+        <th>Type de contrat</th>
+        <th>Type de paiement</th>
+        <th>Remarques</th>
+      </tr>
+    </thead>
+    <tbody id="resultsBody">
+    </tbody>
+  </table>
+
+  <button type="button" class="back-button" onclick="window.location.href='recherche_reglement_choix.html'"><i class="fas fa-arrow-left"></i> Retour</button>
+
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function search() {
+      const searchTerm = document.getElementById('searchTerm').value;
+      ipcRenderer.send('search', searchTerm);
+    }
+
+    ipcRenderer.on('search-reply', (event, data) => {
+      const resultsBody = document.getElementById('resultsBody');
+      resultsBody.innerHTML = '';
+      for (let row of data) {
+        const tr = document.createElement('tr');
+        for (let key in row) {
+          const td = document.createElement('td');
+          td.textContent = row[key];
+          tr.appendChild(td);
+        }
+        resultsBody.appendChild(tr);
+      }
+    });
+  </script>
+</body>
+</html>

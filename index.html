@@ -11,8 +11,9 @@
     <h1>Gestion des dossiers</h1>
     <div class="button-container">
       <button class="color-button" onclick="nouveauClient()">Nouveau client</button>
-      <button class="color-button" onclick="clientPortefeuille()">Client déjà en portefeuille</button>
+      <button class="color-button" onclick="clientPortefeuille()">Ajout de contrat</button>
       <button class="color-button" onclick="reglement()">Règlement</button>
+      <button class="color-button" onclick="rechercheReglement()">Recherche d'un règlement</button>
     </div>
     <div class="button-container">
       <button class="color-button" onclick="ajoutDocument()">Ajout de documents</button>
@@ -22,6 +23,10 @@
     <button id="open-file-manager-btn" class="folder-button" onclick="openFileManager()"><i class="fa fa-folder"></i> Ouvrir le dossier en cours</button>
     <script>
       const { ipcRenderer } = require('electron');
+
+      function rechercheReglement() {
+        window.location.href = 'recherche_reglement_choix.html';
+      }
 
       function reglement() {
         ipcRenderer.send('reglement-in');

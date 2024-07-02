@@ -71,18 +71,19 @@
     </select><span id="banque-br" style="display: none;"><br></span>
 
     <label for="montant">Montant du virement :</label>
-    <input type="number" step="0.01" min="0" max="1000000" id="montant" name="montant" required/><br><br>
+    <input type="number" step="0.01" min="0" max="10000000" id="montant" name="montant" required/><br><br>
     <label for="type-paiement">Type de paiement :</label>
     <select id="type-paiement" name="type-paiement" required>
       <option value="">-- Choix --</option>
       <option value="Virement">Virement</option>
       <option value="Chèque">Chèque</option>
       <option value="TIP">TIP</option>
+      <option value="Espèces">Espèces</option>
     </select><br><br>
     <label for="remarques">Remarques :</label>
     <input type="text" id="remarques" name="remarques"></input><br><br>
     <label for="date">Date :</label>
-    <input type="month" id="date" name="date"><br><br>
+    <input type="date" id="date" name="date"><br><br>
     <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
     <button type="submit" class="submit-button" id="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
   </form>

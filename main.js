@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const xlsx = require('xlsx');
 const fs = require('fs');
+const { type } = require('os');
 
 // Variable pour stocker le répertoire de base
 let baseDir = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED API FEC FD';
@@ -19,6 +20,8 @@ let isReglement = false;
 let typeContrat = '';
 // Variable pour savoir si on vient de index to ajout_doc
 let indexToAjoutDoc = false;
+// Variable pour stocker le type de la recherche de règlement
+let typeRechercheReglement = '';
 
 function getRowCount(xlsxFile, shitName) {
 
@@ -197,67 +200,6 @@ ipcMain.on('submit-particuliers', (event, data) => {
 
   event.sender.send('folder-created', 'particuliers');
 });
-
-function convertDateFormat(dateString) {
-  if (!dateString) {
-    return '';
-  }
-
-  // Split the date string into an array of parts
-  var parts = dateString.split("-");
-
-  const partsCount = parts.length;
-
-  if (partsCount === 2) {
-    switch (parts[1]) {
-      case '01':
-        parts[1] = 'Janvier';
-        break;
-      case '02':
-        parts[1] = 'Février';
-        break;
-      case '03':
-        parts[1] = 'Mars';
-        break;
-      case '04':
-        parts[1] = 'Avril';
-        break;
-      case '05':
-        parts[1] = 'Mai';
-        break;
-      case '06':
-        parts[1] = 'Juin';
-        break;
-      case '07':
-        parts[1] = 'Juillet';
-        break;
-      case '08':
-        parts[1] = 'Août';
-        break;
-      case '09':
-        parts[1] = 'Septembre';
-        break;
-      case '10':
-        parts[1] = 'Octobre';
-        break;
-      case '11':
-        parts[1] = 'Novembre';
-        break;
-      case '12':
-        parts[1] = 'Décembre';
-        break;
-      default:
-        break;
-    }
-    // Rearrange the parts and join them with "/"
-    var newDateString = parts[1] + " " + parts[0];
-  } else {
-    // Rearrange the parts and join them with "/"
-    var newDateString = parts[2] + "/" + parts[1] + "/" + parts[0];
-  }
-  // Return the new date string
-  return newDateString;
-}
 
 
 // Handle form submission for "Pro"
@@ -866,41 +808,42 @@ ipcMain.on('submit-reglement', (event, data) => {
   }
 
   var now = new Date();
-  var dateReglement = now.toLocaleDateString();
+  var dateSaisie = now.toLocaleDateString();
 
   const montant = data.montant;
   const typePaiement = data.typePaiement.toUpperCase();
   const remarques = data.remarques;
-  const date = convertDateFormat(data.date);
+  const dateReglement = convertDateFormat(data.date);
+  const sheetName = convertDateToSheetName(dateReglement);
 
   // Load the existing workbook
   const workbook = xlsx.readFile(xlsxFileReglement);
 
   // Access the worksheet with the name stored in the date variable
-  let worksheetName = workbook.SheetNames.find(sheetName => sheetName === date);
+  let worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
 
   if (!worksheetName) {
 
     // Create a new worksheet with the date as the name
     const newWorksheet = xlsx.utils.aoa_to_sheet([
-      ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
+      ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de saisie', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
     ]);
   
     // Append the new worksheet to the existing workbook
-    xlsx.utils.book_append_sheet(workbook, newWorksheet, date);
+    xlsx.utils.book_append_sheet(workbook, newWorksheet, sheetName);
   
     // Save the updated workbook
     xlsx.writeFile(workbook, xlsxFileReglement);
-    worksheetName = workbook.SheetNames.find(sheetName => sheetName === date);
+    worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
   }
   const worksheet = workbook.Sheets[worksheetName];
 
   // Check for duplicate entries
   const duplicateFound = Object.values(worksheet).some((row, index) => {
     if (index === 0) return false; // Ignore the header row
-    const cellF = worksheet[xlsx.utils.encode_cell({r: index, c: 5})];
-    if (cellF && cellF.v) {
-      return cellF.v.toUpperCase() === numeroContrat.toUpperCase();
+    const cellG = worksheet[xlsx.utils.encode_cell({r: index, c: 6})];
+    if (cellG && cellG.v) {
+      return cellG.v.toUpperCase() === numeroContrat.toUpperCase();
     }
     return false;
   });
@@ -915,12 +858,13 @@ ipcMain.on('submit-reglement', (event, data) => {
       A: nomClient,
       B: beneficiaire,
       C: nomBeneficiaire,
-      D: dateReglement,
-      E: montant,
-      F: numeroContrat,
-      G: typeContrat,
-      H: typePaiement,
-      I: remarques
+      D: dateSaisie,
+      E: dateReglement,
+      F: montant,
+      G: numeroContrat,
+      H: typeContrat,
+      I: typePaiement,
+      J: remarques
     };
 
     // Update the row data
@@ -941,11 +885,12 @@ ipcMain.on('submit-reglement', (event, data) => {
       { wch: 20 }, // Column B
       { wch: 20 }, // Column C
       { wch: 20 }, // Column D
-      { wch: 15 }, // Column E
-      { wch: 17 }, // Column F
-      { wch: 15 }, // Column G
-      { wch: 17 }, // Column H
-      { wch: 21 }  // Column I
+      { wch: 20 }, // Column E
+      { wch: 15 }, // Column F
+      { wch: 17 }, // Column G
+      { wch: 15 }, // Column H
+      { wch: 17 }, // Column I
+      { wch: 21 }  // Column J
     ];
 
     // Set the column widths for the worksheet
@@ -989,4 +934,137 @@ ipcMain.on('index-to-ajout-doc', (event) => {
 
 ipcMain.on('index-out', (event) => {
   indexToAjoutDoc = false;
+});
+
+// Handle form submission for "Auto"
+ipcMain.on('submit-divers', (event, data) => {
+  const typeContrat = data.typeContrat.toUpperCase() || '';
+  const numeroContrat = data.numeroContrat.toUpperCase() || '';
+
+  const subDirParts = [typeContrat, numeroContrat].filter(Boolean);
+  const subDirName = subDirParts.join(' ');
+  const subDir = path.join(currentDir, subDirName);
+  if (!fs.existsSync(subDir)){
+    fs.mkdirSync(subDir);
+  }
+  currentDir = subDir;
+  event.sender.send('divers-folder-created');
+});
+
+function convertDateToSheetName(date) {
+  const parts = date.split("/");
+
+  let mois = parts[1];
+
+  switch (mois) {
+    case '01':
+      mois = 'Janvier';
+      break;
+    case '02':
+      mois = 'Fevrier';
+      break;
+    case '03':
+      mois = 'Mars';
+      break;
+    case '04':
+      mois = 'Avril';
+      break;
+    case '05':
+      mois = 'Mai';
+      break;
+    case '06':
+      mois = 'Juin';
+      break;
+    case '07':
+      mois = 'Juillet';
+      break;
+    case '08':
+      mois = 'Aout';
+      break;
+    case '09':
+      mois = 'Septembre';
+      break;
+    case '10':
+      mois = 'Octobre';
+      break;
+    case '11':
+      mois = 'Novembre';
+      break;
+    case '12':
+      mois = 'Decembre';
+      break;
+    default:
+      break;
+  }
+
+  return mois + " " + parts[2];
+}
+
+function convertDateFormat(dateString) {
+  if (!dateString) {
+    return '';
+  }
+
+  // Split the date string into an array of parts
+  var parts = dateString.split("-");
+
+  // Rearrange the parts and join them with "/"
+  var newDateString = parts[2] + "/" + parts[1] + "/" + parts[0];
+
+  // Return the new date string
+  return newDateString;
+}
+
+ipcMain.on('search', (event, searchTerm) => {
+  const workbook = xlsx.readFile(xlsxFileReglement);
+  const sheet_name_list = workbook.SheetNames;
+
+  let searchResults = [];
+
+  // Loop through each sheet
+  for (let sheetName of sheet_name_list) {
+    const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+    // Loop through each row in the sheet
+    for (let row of sheetData) {
+
+      switch (typeRechercheReglement) {
+        case 'Nom':
+          if (row['Nom'] && row['Nom'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.push(row);
+          }
+          break;
+        case 'Date de saisie':
+          if (row['Date de saisie'] && row['Date de saisie'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.push(row);
+          }
+          break;
+        case 'Date de règlement':
+          if (row['Date de règlement'] && row['Date de règlement'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.push(row);
+          }
+          break;
+        case 'Montant':
+          if (row['Montant'] && row['Montant'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.push(row);
+          }
+          break;
+        case 'Numéro de contrat':
+          if (row['Numéro de contrat'] && row['Numéro de contrat'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+            searchResults.push(row);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+  }
+
+  event.sender.send('search-reply', searchResults);
+});
+
+ipcMain.on('maj-type-recherche-reglement', (event, typeRecherche) => {
+  typeRechercheReglement = typeRecherche;
+  console.log('Type de recherche reglement mis a jour:', typeRechercheReglement);
+  event.sender.send('maj-type-recherche-reglement-done');
 });

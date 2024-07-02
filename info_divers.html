@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Informations Divers</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="info.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+  </head>
+  <body>
+    <h1>Informations du contrat</h1>
+    <form id="diversForm">
+      <label for="type-contrat">Type de contrat :</label>
+      <input type="text" id="type-contrat" name="type-contrat" autofocus><br><br>
+      <label for="numeroContrat">Numéro de contrat :</label>
+      <input type="text" id="numeroContrat" name="numeroContrat" placeholder="123456789" required><br><br>
+      <button type="button" class="back-button" onclick="retourProduits()"><i class="fas fa-arrow-left"></i> Retour</button>
+      <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+    </form>
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      function retourProduits() {
+        window.location.href = 'produits.html';
+      }
+
+      document.getElementById('diversForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const typeContrat = document.getElementById('typeContrat').value;
+        const numeroContrat = document.getElementById('numeroContrat').value;
+        ipcRenderer.send('submit-divers', { typeContrat, numeroContrat });
+      });
+
+      ipcRenderer.on('divers-folder-created', () => {
+        window.location.href = 'documents_divers.html';
+      });
+    </script>
+  </body>
+</html>

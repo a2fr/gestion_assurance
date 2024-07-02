@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Recherche Règlement</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <style>
+    .color-button {
+      background-color: firebrick;
+      color: white;
+      transition: background-color 0.3s ease;
+    }
+    
+    .color-button:hover {
+      background-color: darkred;
+      color: azure;
+    }
+  </style>
+  <h1>Recherche d'un règlement selon quel critère?</h1>
+  <div class="button-container">
+    <button class="color-button" onclick="nomClient()">Nom du client</button>
+    <button class="color-button" onclick="montantReglement()">Montant du règlement</button>
+    <button class="color-button" onclick="dateReglement()">Date de règlement</button>
+  </div>
+  <div class="button-container">
+    <button class="color-button" onclick="dateSaisie()">Date de saisie</button>
+    <button class="color-button" onclick="numeroContrat()">Numéro de contrat</button>
+  </div>
+  <br>
+  <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+  <script>
+    const { ipcRenderer } = require('electron');
+
+    function nomClient() {
+      ipcRenderer.send('maj-type-recherche-reglement', 'Nom');
+    }
+
+    function montantReglement() {
+      ipcRenderer.send('maj-type-recherche-reglement', 'Montant');
+    }
+
+    function dateReglement() {
+      ipcRenderer.send('maj-type-recherche-reglement', 'Date de règlement');
+    }
+
+    function dateSaisie() {
+      ipcRenderer.send('maj-type-recherche-reglement', 'Date de saisie');
+    }
+
+    function numeroContrat() {
+      ipcRenderer.send('maj-type-recherche-reglement', 'Numéro de contrat');
+    }
+
+    ipcRenderer.on('maj-type-recherche-reglement-done', (event) => {
+      window.location.href = 'recherche_reglement.html';
+    });
+
+    function retourIndex() {
+      window.location.href = 'index.html';
+    }
+
+  </script>
+</body>
+</html>
