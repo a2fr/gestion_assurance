@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Résilier un contrat</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
+</head>
+<body>
+  <style>
+    #searchBar {
+      width: 400px;
+      height: 40px;
+      font-size: 18px;
+      padding: 0 10px;
+      margin-bottom: 10px;
+    }
+
+    #typeResiliation {
+      width: 400px;
+      height: 80px;
+      font-size: 18px;
+      font-size: larger;
+      text-align: center;
+    }
+  </style>
+  <h1>Résiliation de contrats</h1><br>
+  <form id="resiliationForm">
+    <input type="text" id="searchBar" placeholder="Chercher par numéro de contrat" required autofocus><br><br>
+    <select id="typeResiliation" required>
+      <option value="">-- Veuillez choisir un type de résiliation --</option>
+      <option value="loi-chatel">Loi Chatel</option>
+      <option value="loi-hamon">Loi Hamon</option>
+      <option value="vente-req-deces">Vente, réquisition, décès</option>
+      <option value="perte-totale">Perte totale</option>
+    </select><br><br>
+    <button type="button" class="back-button" onclick="window.location.href='index.html'"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="submit" class="submit-button" id="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
+  </form>
+  <script>
+    const { ipcRenderer } = require('electron');
+    // Add event listeners for searchBar and options elements
+    const searchBar = document.getElementById('searchBar');
+    const options = document.getElementById('options');
+
+    document.getElementById('resiliationForm').addEventListener('submit', function(event) {
+      const numeroContrat = document.getElementById("searchBar").value;
+      const typeResiliation = document.getElementById("typeResiliation").value;
+      sendDataToMain('searchResiliation', { numeroContrat , typeResiliation } );
+    });
+
+    ipcRenderer.on('search-results', (event, contratExiste) => {
+      if (contratExiste) {
+        window.location.href = 'resiliation_results.html';
+      } else {
+        window.location.href = 'resiliation.html';
+      }
+    });
+
+    // Function to send data to main.js using ipcRenderer
+    function sendDataToMain(eventName, data) {
+      ipcRenderer.send(eventName, data);
+    }
+  </script>
+</body>
+</html>

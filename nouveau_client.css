@@ -4,13 +4,13 @@
     align-items: center;
   }
   .color-button {
-    background-color: firebrick;
+    background-color: rgb(118, 23, 23);
     color: white;
     transition: background-color 0.3s ease;
   }
   
   .color-button:hover {
-    background-color: darkred;
+    background-color: rgb(69, 0, 0);
     color: azure;
   }
   

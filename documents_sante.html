@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Document Habitation</title>
+  <title>Documents Santé/Prévoyance</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="documents.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 </head>
 <body>
-  <h1>Document Habitation</h1>
+  <h1>Documents de santé ou de prévoyance</h1>
   <h2>
     <div id="variable-display"></div>
   </h2>
@@ -16,8 +16,8 @@
   <table>
     <thead>
       <tr>
-        <th>Document</th>
-        <th>Upload</th>
+        <th>DOCUMENT</th>
+        <th>UPLOAD</th>
       </tr>
     </thead>
     <tbody id="document-table-body">
@@ -33,9 +33,17 @@
         <td>Attestation de sécurité</td>
         <td><input type="file" id="upload-secu" data-doc="secu"></td>
       </tr>
-      <tr>
+      <tr id="not-sante-tns">
         <td>RIB</td>
         <td><input type="file" id="upload-rib" data-doc="rib"></td>
+      </tr>
+      <tr id="sante-tns1" style="display: none;">
+        <td>RIB perso</td>
+        <td><input type="file" id="upload-rib-perso" data-doc="rib-perso"></td>
+      </tr>
+      <tr id="sante-tns2" style="display: none;">
+        <td>RIB pro</td>
+        <td><input type="file" id="upload-rib-pro" data-doc="rib-pro"></td>
       </tr>
       <tr>
         <td>Devis</td>
@@ -44,6 +52,10 @@
       <tr>
         <td>Contrat</td>
         <td><input type="file" id="upload-contrat" data-doc="contrat"></td>
+      </tr>
+      <tr>
+        <td>SEPA</td>
+        <td><input type="file" id="upload-sepa" data-doc="sepa"></td>
       </tr>
     </tbody>
   </table>
@@ -95,6 +107,19 @@
 
     document.addEventListener('DOMContentLoaded', function() {
       requestDocName('');
+      requestDocType('');
+    });
+
+    function requestDocType() {
+      ipcRenderer.send('request-doc-type');
+    }
+
+    ipcRenderer.on('request-doc-type-done', (event, type) => {
+      if (type === 'sante_tns') {
+        document.getElementById('not-sante-tns').style.display = 'none';
+        document.getElementById('sante-tns1').style.display = 'table-row';
+        document.getElementById('sante-tns2').style.display = 'table-row';
+      }
     });
 
     function requestDocName() {

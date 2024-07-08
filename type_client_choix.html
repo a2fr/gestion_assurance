@@ -32,16 +32,14 @@
     const { ipcRenderer } = require('electron');
 
     function retourIndex() {
-      window.location.href = 'recherche_client.html';
+      window.location.href = 'ajout_contrat.html';
     }
 
     document.getElementById('particulier-button').addEventListener('click', () => {
-      localStorage.setItem('isPro', false);
       window.location.href = 'produits.html';
     });
 
     document.getElementById('pro-button').addEventListener('click', () => {
-      localStorage.setItem('isPro', true);
       window.location.href = 'produits.html';
     });
 

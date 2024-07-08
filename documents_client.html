@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Documents Habitation</title>
+  <title>Documents Client</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="documents.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 </head>
 <body>
-  <h1>Documents de l'habitation</h1>
+  <h1>Documents Client</h1>
   <h2>
     <div id="variable-display"></div>
   </h2>
@@ -21,30 +21,6 @@
       </tr>
     </thead>
     <tbody id="document-table-body">
-      <tr>
-        <td>Bail</td>
-        <td><input type="file" id="upload-bail" data-doc="bail"></td>
-      </tr>
-      <tr>
-        <td>CNI</td>
-        <td><input type="file" id="upload-cni" data-doc="cni"></td>
-      </tr>
-      <tr>
-        <td>Devis</td>
-        <td><input type="file" id="upload-devis" data-doc="devis"></td>
-      </tr>
-      <tr>
-        <td>Contrat</td>
-        <td><input type="file" id="upload-contrat" data-doc="contrat"></td>
-      </tr>
-      <tr>
-        <td>RIB</td>
-        <td><input type="file" id="upload-rib" data-doc="rib"></td>
-      </tr>
-      <tr>
-        <td>SEPA</td>
-        <td><input type="file" id="upload-sepa" data-doc="sepa"></td>
-      </tr>
     </tbody>
   </table>
   <br>
@@ -54,6 +30,18 @@
   <button type="submit" id="docForm" class="submit-button">Enregistrer <i class="fas fa-arrow-right"></i></button>
   <script>
     const { ipcRenderer } = require('electron');
+
+    document.addEventListener('DOMContentLoaded', function() {
+      requestDocName('');
+    });
+
+    function requestDocName() {
+      ipcRenderer.send('request-doc-name');
+    }
+
+    ipcRenderer.on('doc-name', (event, variable) => {
+      document.getElementById('variable-display').innerText = variable;
+    });
 
     function openFileManager() {
       ipcRenderer.send('open-file-manager');
@@ -76,33 +64,8 @@
     });
 
     ipcRenderer.on('files-uploaded', (event, type) => {
-      ipcRenderer.send('get-reglement');
-    });
-
-    ipcRenderer.on('get-reglement-done', (event, reglement) => {
-      const isReglement = reglement;
-      if (isReglement) {
-        ipcRenderer.send('type-document-maj', 'habitation');
-      } else {
-        ipcRenderer.send('index-out');
-        window.location.href = 'index.html';
-      }
-    });
-
-    ipcRenderer.on('type-document-maj-done', () => {
-      window.location.href = 'reglement_excel.html';
-    });
-
-    document.addEventListener('DOMContentLoaded', function() {
-      requestDocName('');
-    });
-
-    function requestDocName() {
-      ipcRenderer.send('request-doc-name');
-    }
-
-    ipcRenderer.on('doc-name', (event, variable) => {
-      document.getElementById('variable-display').innerText = variable;
+      ipcRenderer.send('index-out');
+      window.location.href = 'index.html';
     });
 
     document.getElementById('addRowBtn').addEventListener('click', function() {
@@ -129,7 +92,7 @@
 
       document.getElementById('document-table-body').appendChild(newRow);
     });
-    
+
   </script>
 </body>
 </html>

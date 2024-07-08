@@ -11,13 +11,13 @@
   <h1>Particulier</h1>
   <form id="particuliersForm">
     <label for="nom">Nom :</label>
-    <input type="text" id="nom" name="nom" required autofocus><br><br>
+    <input type="text" id="nom" name="nom" class="restricted-input" autofocus required><br><br>
     <label for="prenom">Prénom :</label>
     <input type="text" id="prenom" name="prenom" required><br><br>
     <label for="telephone">Téléphone :</label>
     <input type="text" id="telephone" name="telephone"><br><br>
     <label for="mail">Mail :</label>
-    <input type="email" id="mail" name="mail"><br><br>
+    <input type="email" id="mail" name="mail" required><br><br>
     <label for="birthday">Date de naissance :</label>
     <input type="date" id="birthday" name="birthday"><br><br>
     <label for="city">Ville de naissance :</label>
@@ -36,10 +36,10 @@
       <option value="Ouvriers">Ouvriers</option>
       <option value="Retraités">Retraités</option>
       <option value="Autres personnes sans activité professionnelle">Autres personnes sans activité professionnelle</option>
-    </select><br><br>
-    <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
-    <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
-  </form>
+    </select>
+  </form><br><br>
+  <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
+  <button type="button" class="submit-button" id="submission">Soumettre <i class="fas fa-arrow-right"></i></button>
   <script>
     const { ipcRenderer } = require('electron');
 
@@ -47,34 +47,42 @@
       window.location.href = 'nouveau_client.html';
     }
 
-    document.getElementById('particuliersForm').addEventListener('submit', function(event) {
-      event.preventDefault();
-      const nom = document.getElementById('nom').value;
-      const prenom = document.getElementById('prenom').value;
+    document.getElementById('submission').addEventListener('click', function(event) {
+      event.preventDefault(); // Prevent default behavior
+
+      const nom = document.getElementById('nom');
+      const prenom = document.getElementById('prenom');
       const telephone = document.getElementById('telephone').value;
-      const mail = document.getElementById('mail').value;
+      const mail = document.getElementById('mail');
       const birthday = document.getElementById('birthday').value;
       const city = document.getElementById('city').value;
       const country = document.getElementById('country').value;
       const post = document.getElementById('post').value;
       const job = document.getElementById('job').value;
 
-      ipcRenderer.send('submit-particuliers', {
-        nom,
-        prenom,
-        telephone,
-        mail,
-        birthday,
-        city,
-        country,
-        post,
-        job
-      });
+      // Validate required fields manually
+      if (nom.checkValidity() && prenom.checkValidity() && mail.checkValidity()) {
+        ipcRenderer.send('submit-particuliers', {
+          nom: nom.value,
+          prenom: prenom.value,
+          telephone: telephone,
+          mail: mail.value,
+          birthday: birthday,
+          city: city,
+          country: country,
+          post: post,
+          job: job
+        });
+      } else {
+        // Report validity for the invalid fields
+        nom.reportValidity();
+        prenom.reportValidity();
+        mail.reportValidity();
+      }
     });
 
-    ipcRenderer.on('folder-created', (event, type) => {
-      if (type === 'particuliers') {
-        localStorage.setItem('isPro', false);
+    ipcRenderer.on('folder-created', (event, type, erreurSaisie) => {
+      if (!erreurSaisie) {
         window.location.href = 'produits.html';
       }
     });

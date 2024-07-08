@@ -1,8 +1,17 @@
 body {
   text-align: center;
   font-family: Arial, sans-serif;
-  min-height: 94.5vh;
-  background-image: linear-gradient(to top right, black, rgb(25,25,25), rgb(50, 50, 50));
+  background-size: 100% 100%;
+  /*background-image: linear-gradient(to top right, black, rgb(25,25,25), rgb(50, 50, 50));*/
+  /*background-color: grey;*/
+  background-image: linear-gradient(to top right, #808080, #a9a9a9 33%, #c2c2c2 66%, #d9d9d9 100%);
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: auto;
 }
 
 button {
@@ -19,14 +28,14 @@ button {
   border-radius: 42px;
   width: 150px;
   height: 75px;
-  background-color: mediumblue;
+  background-color: darkblue;
   color: aliceblue;
   font-size: 19px;
   transition: background-color 0.3s ease;
 }
 
 .back-button:hover {
-  background-color: darkblue;
+  background-color: rgb(0, 0, 77);
 }
 
 .back-button i {
@@ -37,14 +46,14 @@ button {
   border-radius: 42px;
   width: 175px;
   height: 75px;
-  background-color: firebrick;
+  background-color: rgb(128, 25, 25);
   color: aliceblue;
   font-size: 19px;
   transition: background-color 0.3s ease;
 }
 
 .submit-button:hover {
-  background-color: darkred;
+  background-color: rgb(92, 1, 1);
 }
 
 .submit-button i {
@@ -69,7 +78,7 @@ form {
   display: inline-block;
   text-align: left;
   margin-top: 20px;
-  color: aliceblue;
+  color: darkslategray;
 }
 
 label {
@@ -83,25 +92,28 @@ input {
 }
 
 h1 {
-  color: whitesmoke;
+  color: black;
 }
 
 h2 {
-  color: wheat;
+  background-image: linear-gradient(to right, #006400, #008000, #009900, #00b300);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .folder-button {
   border-radius: 42px;
   width: 225px;
   height: 75px;
-  background-color: rebeccapurple;
+  background-color: rgb(69, 33, 105);
   color: aliceblue;
   font-size: 19px;
   transition: background-color 0.3s ease;
 }
 
 .folder-button:hover {
-  background-color: indigo;
+  background-color: rgb(33, 1, 56);
 }
 
 .search-container {
@@ -120,4 +132,11 @@ h2 {
 
 #searchInput:valid ~ .clear-button {
   display: block; /* Affiche la croix lorsque le champ de recherche contient du texte */
+}
+
+.checkbox {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0 0 0 10px;
 }

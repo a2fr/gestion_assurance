@@ -1,13 +1,21 @@
 #proForm input[type="text"] {
-    height: 30px;
-    padding: 2px 5px;
-  }
-  
-  #proForm label {
-    font-size: 21px;
-    display: inline;
+  height: 30px;
+  padding: 2px 5px;
 }
-  #proForm input[type="text"] {
-    font-size: 21px;
-  }
-  
+
+#proForm label {
+  font-size: 21px;
+  display: inline-block;
+}
+
+#proForm input[type="text"] {
+  font-size: 21px;
+}
+#proForm input[type="submit"] {
+  background-color: blue;
+  color: white;
+  padding: 10px 20px;
+  font-size: 18px;
+  border: none;
+  cursor: pointer;
+}

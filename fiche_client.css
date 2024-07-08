@@ -1,10 +1,10 @@
 p {
-    color: wheat;
+    color: black;
     font-size: x-large;
 }
 
-button {
-    background-color: #4CAF50;
+p button {
+    background-image: linear-gradient(to right, #006400, #008000, #009900, #00b300);
     color: white;
     cursor: pointer;
     height: auto;
@@ -12,6 +12,6 @@ button {
     border-radius: 17px;
 }
 
-button:active {
-    background-color: #3e8e41;
+p button:active {
+    background-image: linear-gradient(to right, #00b300, #009900, #008000, #006400);
 }

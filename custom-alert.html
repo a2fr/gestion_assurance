@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Alert</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 20px;
+      background-color: #f5f5f5;
+      color: #333;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      border-radius: 5px;
+    }
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <h1 id="alert-message"></h1>
+  <button id="alert-ok-button">OK</button>
+
+  <script>
+    const alertMessage = document.getElementById('alert-message')
+    const alertOkButton = document.getElementById('alert-ok-button')
+
+    require('electron').ipcRenderer.on('custom-alert', (event, message) => {
+      alertMessage.innerText = message
+      alertOkButton.focus()
+    })
+
+    alertOkButton.addEventListener('click', () => {
+      require('electron').ipcRenderer.send('close-custom-alert')
+    })
+  </script>
+</body>
+</html>

@@ -9,12 +9,22 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
-<body id="tout">
+<body>
+  <style>
+    .wrapper {
+      display: flex;
+      justify-content: space-between;
+      margin: 0 10%;
+    }
+  </style>
   <h1>
     <div id="variable-display"></div>
   </h1>
 
-  <div id="client-data-display"></div>
+  <span class="wrapper">
+    <div id="client-data-display"></div>
+    <div id="additional-data-display"></div>
+  </span>
 
   <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
   <button type="button" class="home-button" onclick="retourHome()"><i class="fas fa-home"></i> Home</button>
@@ -38,7 +48,12 @@
     document.addEventListener('DOMContentLoaded', function() {
       requestClientName();
       requestClientData();
+      requestAdditionalData();
     });
+
+    function requestAdditionalData() {
+      ipcRenderer.send('request-additional-data');
+    }
 
     function requestClientName() {
       ipcRenderer.send('request-client-name');
@@ -50,6 +65,19 @@
 
     ipcRenderer.on('client-name', (event, variable) => {
       document.getElementById('variable-display').innerText = variable;
+    });
+
+    ipcRenderer.on('additional-data', (event, additionalData) => {
+      const additionalDataDisplay = document.getElementById('additional-data-display');
+      let additionalDataHTML = '';
+
+      additionalData.forEach(data => {
+        additionalDataHTML += `
+          <p>${data}</p>
+        `;
+      });
+
+      additionalDataDisplay.innerHTML = additionalDataHTML;
     });
 
     ipcRenderer.on('client-data', (event, clientData) => {

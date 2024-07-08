@@ -2,19 +2,24 @@
 <html>
   <head>
     <meta charset="UTF-8">
-    <title>Professionel</title>
+    <title>Professionnel</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="pro.css">
+    <link rel="stylesheet" href="particuliers.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
   </head>
   <body>
-    <h1>Professionel</h1>
+    <h1>Professionnel</h1><br>
     <form id="proForm">
       <label for="numeroSociete">Nom de la société :</label>
-      <input type="text" id="numeroSociete" name="numeroSociete" autofocus><br><br>
-      <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
-      <button type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
-    </form>
+      <input type="text" id="numeroSociete" name="numeroSociete" autofocus required><br><br>
+      <label for="telephone">Numéro de téléphone :</label>
+      <input type="text" id="telephone" name="telephone"><br><br>
+      <label for="mail">Mail :</label>
+      <input type="email" id="mail" name="mail"><br><br>
+    </form><br><br>
+    <button type="button" class="back-button" onclick="retourNouveauClient()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button id="submission" type="submit" class="submit-button">Soumettre <i class="fas fa-arrow-right"></i></button>
     <script>
       const { ipcRenderer } = require('electron');
 
@@ -22,17 +27,26 @@
         window.location.href = 'nouveau_client.html';
       }
 
-      document.getElementById('proForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const numeroSociete = document.getElementById('numeroSociete').value;
-        ipcRenderer.send('submit-pro', { numeroSociete });
+      document.getElementById('submission').addEventListener('click', function(event) {
+        const numeroSociete = document.getElementById('numeroSociete');
+        const telephone = document.getElementById('telephone');
+        const mail = document.getElementById('mail');
+
+        if (numeroSociete.checkValidity() && mail.checkValidity()) {
+          event.preventDefault();
+          ipcRenderer.send('submit-pro', {
+            numeroSociete: numeroSociete.value,
+            telephone: telephone.value,
+            mail: mail.value
+          });
+        } else {
+          numeroSociete.reportValidity();
+          mail.reportValidity();
+        }
       });
 
       ipcRenderer.on('folder-created', (event, type) => {
-        if (type === 'pro') {
-          localStorage.setItem('isPro', true);
-          window.location.href = 'produits.html';
-        }
+        window.location.href = 'produits.html';
       });
     </script>
   </body>

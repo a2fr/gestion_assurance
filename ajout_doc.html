@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>Recherche Contrat</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="recherche_client.css">
+  <link rel="stylesheet" href="ajout_contrat.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 </head>
 <body>
@@ -23,6 +23,7 @@
     const { ipcRenderer } = require('electron');
 
     document.addEventListener('DOMContentLoaded', function() {
+      searchContract('');
       ipcRenderer.send('store-reglement');
     });
 
@@ -32,7 +33,7 @@
 
     ipcRenderer.on('get-reglement-done', (event, isReglement) => {
       if (isReglement === true) {
-        window.location.href = 'recherche_client.html';
+        window.location.href = 'ajout_contrat.html';
       } else {
         ipcRenderer.send('index-out');
         window.location.href = 'index.html';
@@ -46,11 +47,6 @@
 
     // Récupérez l'élément d'entrée de recherche
     const searchInput = document.getElementById('searchInput');
-
-    // Exécutez la recherche de contrat une fois au chargement de la page avec une chaîne de requête vide
-    document.addEventListener('DOMContentLoaded', function() {
-      searchContract('');
-    });
 
     // Ajoutez un écouteur d'événement d'entrée sur l'élément de recherche
     searchInput.addEventListener('input', function() {

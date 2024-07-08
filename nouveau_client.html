@@ -24,6 +24,7 @@
         window.location.href = 'pro.html';
       }
       function retourIndex() {
+        ipcRenderer.send('nouvelle-fiche-client-out');
         ipcRenderer.send('get-reglement');
       }
 

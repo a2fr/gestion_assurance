@@ -10,19 +10,36 @@
   <body>
     <h1>Gestion des dossiers</h1>
     <div class="button-container">
-      <button class="color-button" onclick="nouveauClient()">Nouveau client</button>
+      <button class="color-button" onclick="nouveauClient()">Création de fiche client</button>
       <button class="color-button" onclick="clientPortefeuille()">Ajout de contrat</button>
       <button class="color-button" onclick="reglement()">Règlement</button>
       <button class="color-button" onclick="rechercheReglement()">Recherche d'un règlement</button>
     </div>
     <div class="button-container">
-      <button class="color-button" onclick="ajoutDocument()">Ajout de documents</button>
+      <button class="color-button" onclick="ajoutDocumentContrat()">Ajout de documents (contrat)</button>
+      <button class="color-button" onclick="ajoutDocumentClient()">Ajout de documents (client)</button>
       <button class="color-button" onclick="fusion()">Fusion de dossier</button>
-      <button class="color-button" onclick="infosClient()">Infos client</button>
+      <button class="color-button" onclick="infosClient()">Recherche client</button>
+      <button class="color-button" onclick="resiliation()">Résilier un contrat</button>
     </div>
     <button id="open-file-manager-btn" class="folder-button" onclick="openFileManager()"><i class="fa fa-folder"></i> Ouvrir le dossier en cours</button>
+    <button id="changeParameterBtn" class="color-button" style="display: none;">Change Parameter</button>
     <script>
       const { ipcRenderer } = require('electron');
+
+      document.getElementById('changeParameterBtn').addEventListener('click', function() {
+        ipcRenderer.send('change-mode');
+      });
+
+      ipcRenderer.on('change-mode-done', (event, mode) => {
+        if (mode) {
+          document.body.style.backgroundImage = 'linear-gradient(to top right, black, rgb(25,25,25), rgb(50, 50, 50))';
+        }
+      });
+
+      function resiliation() {
+        window.location.href = 'resiliation.html';
+      }
 
       function rechercheReglement() {
         window.location.href = 'recherche_reglement_choix.html';
@@ -44,15 +61,23 @@
         ipcRenderer.send('open-file-manager');
       }
       function nouveauClient() {
-        window.location.href = 'nouveau_client.html';
+        ipcRenderer.send('get-nouvelle-fiche-client');
       }
+
+      ipcRenderer.on('get-nouvelle-fiche-client-done', (event) => {
+        window.location.href = 'nouveau_client.html';
+      });
 
       function clientPortefeuille() {
-        window.location.href = 'recherche_client.html';
+        window.location.href = 'ajout_contrat.html';
       }
 
-      function ajoutDocument() {
+      function ajoutDocumentContrat() {
         ipcRenderer.send('index-to-ajout-doc');
+      }
+
+      function ajoutDocumentClient() {
+        window.location.href = 'ajout_doc_client.html';
       }
 
       ipcRenderer.on('index-to-ajout-doc-done', (event) => {
@@ -62,6 +87,7 @@
       function fusion() {
         window.location.href = 'fusion.html';
       }
+
     </script>
   </body>
 </html>

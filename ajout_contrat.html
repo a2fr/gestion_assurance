@@ -2,28 +2,57 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Infos Client</title>
+  <title>Recherche Client</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="ajout_contrat.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 </head>
 <body>
-  <h1>Veuillez indiquer le nom du client recherché</h1>
+  <h1>Recherche d'un client déjà en portefeuille</h1>
   <form id="searchForm">
     <div class="search-container">
       <input type="text" id="searchInput" placeholder="Rechercher par nom, prénom ou numéro de société" autofocus required>
       <span class="clear-button" onclick="clearSearch()"><i class="fas fa-times"></i></span>
     </div>
     <ul id="searchResults"></ul>
-    <button type="button" class="back-button" onclick="retourIndex()"><i class="fas fa-arrow-left"></i> Retour</button>
+    <button type="button" class="home-button" onclick="homeButton()" id="home-button" style="display: none;"><i class="fas fa-home"></i> Home</button>
+    <button type="button" class="back-button" onclick="retourIndex()" id="back-button"><i class="fas fa-arrow-left"></i> Retour</button>
     <button type="submit" class="submit-button">Valider <i class="fas fa-arrow-right"></i></button>
   </form>
   <script>
     const { ipcRenderer } = require('electron');
 
-    function retourIndex() {
-      window.location.href = 'index.html';
+    document.addEventListener('DOMContentLoaded', function() {
+      ipcRenderer.send('get-multiple-contracts');
+    });
+
+    ipcRenderer.on('get-multiple-contracts-done', (event, isMultiple) => {
+      let exMultipleReglement = isMultiple;
+      if (isMultiple) {
+        document.getElementById("home-button").style.display = "inline-block";
+        document.getElementById("back-button").style.display = "none";
+      }
+    });
+
+    function homeButton() {
+      ipcRenderer.send('multiple-contracts-out');
+      ipcRenderer.send('reglement-out');
     }
+
+    ipcRenderer.on('multiple-contracts-out-done', (event) => {
+      window.location.href = 'index.html';
+    });
+
+    function retourIndex() {
+      ipcRenderer.send('get-reglement');
+    }
+
+    ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+      if (isReglement === true)
+        window.location.href = 'reglement.html';
+      else
+        window.location.href = 'index.html';
+    });
 
     // Créez une fonction pour la recherche de client
     function searchClient(query) {
@@ -67,20 +96,22 @@
       ipcRenderer.send('select-client', { selectedClient });
     });
 
-    ipcRenderer.on('client-selected', (event, type) => {
-      window.location.href = 'fiche_client.html';
-    });
-
     function clearSearch() {
       document.getElementById('searchInput').value = '';
       searchClient('');
       document.getElementById('searchForm').reset();
     }
 
+    ipcRenderer.on('client-selected', (event, isReglement) => {
+      if (isReglement === true)
+        window.location.href = 'ajout_doc.html';
+      else
+        window.location.href = 'type_client_choix.html';
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
       searchClient('');
     });
-
   </script>
 </body>
 </html>

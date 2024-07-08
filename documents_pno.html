@@ -2,13 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Documents Habitation</title>
+  <title>Document PNO</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="documents.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
 </head>
 <body>
-  <h1>Documents de l'habitation</h1>
+  <h1>Documents du PNO</h1>
   <h2>
     <div id="variable-display"></div>
   </h2>
@@ -45,6 +45,10 @@
         <td>SEPA</td>
         <td><input type="file" id="upload-sepa" data-doc="sepa"></td>
       </tr>
+      <tr>
+        <td>KBIS</td>
+        <td><input type="file" id="upload-kbis" data-doc="kbis"></td>
+      </tr>  
     </tbody>
   </table>
   <br>
@@ -82,7 +86,7 @@
     ipcRenderer.on('get-reglement-done', (event, reglement) => {
       const isReglement = reglement;
       if (isReglement) {
-        ipcRenderer.send('type-document-maj', 'habitation');
+        ipcRenderer.send('type-document-maj', 'pno');
       } else {
         ipcRenderer.send('index-out');
         window.location.href = 'index.html';

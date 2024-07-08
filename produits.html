@@ -8,8 +8,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.0/css/all.min.css">
   </head>
   <body>
-    <h1>Sélectionner le type de contrat</h1>
-    <h2><div id="variable-display"></div></h2>
+    <span id="client-display">
+      <h1>La fiche client a bien été créée!</h1>
+      <h2><div id="variable-display-client"></div></h2>
+      <h1>Sélectionner le type de contrat</h1>
+    </span>
+    <span id="reglement-display" style="display: none;">
+      <h1>Sélectionner le type de contrat</h1>
+      <h2><div id="variable-display-reglement"></div></h2>
+    </span>
+    <span id="repetition-display" style="display: none;"><h1>Veuillez choisir un contrat avant de valider s'il-vous-plaît</h1></span>
     <form id="produitsForm">
       <div class="produitsContainer">
         <label><input type="radio" name="produits" value="AUTO"> Auto</label><br>
@@ -18,9 +26,9 @@
         <label><input type="radio" name="produits" value="SANTE_TNS"> Santé TNS</label><br>
         <label><input type="radio" name="produits" value="SANTE"> Santé</label><br>
         <label><input type="radio" name="produits" value="SANTE COLLECTIVE"> Santé collective</label><br>
-        <label><input type="radio" name="produits" value="PREVENTION TNS"> Prévention TNS</label><br>
-        <label><input type="radio" name="produits" value="PREVENTION COLLECTIVE"> Prévention collective</label><br>
-        <label><input type="radio" name="produits" value="DIVERS"> Divers</label><br><br>
+        <label><input type="radio" name="produits" value="PREVOYANCE TNS"> Prévoyance TNS</label><br>
+        <label><input type="radio" name="produits" value="PREVOYANCE COLLECTIVE"> Prévoyance collective</label><br>
+        <label><input type="radio" name="produits" value="PNO">PNO</label><br><br>
       </div>
       <button type="button" class="home-button"><i class="fas fa-home"></i> Home</button>
       <button type="submit" class="submit-button">Choisir <i class="fas fa-arrow-right"></i></button>
@@ -30,6 +38,8 @@
 
       document.getElementById('produitsForm').addEventListener('submit', function(event) {
         event.preventDefault();
+        ipcRenderer.send('repetition-out');
+        ipcRenderer.send('nouvelle-fiche-client-out');
         const selectedProducts = Array.from(document.querySelectorAll('input[name="produits"]:checked')).map(radio => radio.value);
         if (selectedProducts.includes('AUTO')) {
           window.location.href = 'info_auto.html';
@@ -52,24 +62,35 @@
           ipcRenderer.send('sante-collective-selected');
           window.location.href = 'info_sante.html';
         }
-        else if (selectedProducts.includes('PREVENTION TNS')) {
-          ipcRenderer.send('prevention-tns-selected');
+        else if (selectedProducts.includes('PREVOYANCE TNS')) {
+          ipcRenderer.send('prevoyance-tns-selected');
           window.location.href = 'info_sante.html';
         }
-        else if (selectedProducts.includes('PREVENTION COLLECTIVE')) {
-          ipcRenderer.send('prevention-collective-selected');
+        else if (selectedProducts.includes('PREVOYANCE COLLECTIVE')) {
+          ipcRenderer.send('prevoyance-collective-selected');
           window.location.href = 'info_sante.html';
+        }
+        else if (selectedProducts.includes('PNO')) {
+          window.location.href = 'info_pno.html';
         }
         else {
-          window.location.href = 'info_divers.html';
+          ipcRenderer.send('nouvelle-fiche-client-in');
+          ipcRenderer.send('repetition-in');
+          ipcRenderer.send('repetition-produits');
         }
       });
 
+      ipcRenderer.on('repetition-done', (event) => {
+        window.location.href = 'produits.html';
+      });
+
       document.querySelector('.home-button').addEventListener('click', function() {
+        ipcRenderer.send('nouvelle-fiche-client-out');
         ipcRenderer.send('get-reglement');
       });
 
       ipcRenderer.on('get-reglement-done', (event, isReglement) => {
+        ipcRenderer.send('repetition-out');
         if (isReglement) {
           ipcRenderer.send('reglement-out');
         } else {
@@ -82,15 +103,28 @@
       });
 
       document.addEventListener('DOMContentLoaded', function() {
+        ipcRenderer.send('get-repetition');
         requestClientName('');
       });
 
       function requestClientName() {
-        ipcRenderer.send('request-client-name');
+        ipcRenderer.send('request-client-name-produits');
       }
 
-      ipcRenderer.on('client-name', (event, variable) => {
-        document.getElementById('variable-display').innerText = variable;
+      ipcRenderer.on('client-name', (event, variable, test) => {
+        if (!test) {
+          document.getElementById('reglement-display').style.display = 'block';
+          document.getElementById('client-display').style.display = 'none';
+          document.getElementById('variable-display-reglement').innerText = variable;
+        } else {
+          document.getElementById('variable-display-client').innerText = variable;
+        }
+      });
+
+      ipcRenderer.on('get-repetition-done', (event, repet) => {
+        if (repet) {
+          document.getElementById('repetition-display').style.display = 'block';
+        }
       });
     </script>
   </body>

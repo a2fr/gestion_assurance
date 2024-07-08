@@ -4,13 +4,12 @@
     align-items: center;
   }
 
-  .color-button {
-    background-color: mediumblue;
-    color: white;
-    transition: background-color 0.3s ease;
-  }
-  
-  .color-button:hover {
-    background-color: darkblue;
-    color: azure;
-  }
+.color-button {
+  background-color: rgb(91, 0, 41);
+  color: whitesmoke;
+  transition: background-color 0.3s ease;
+}
+
+.color-button:hover {
+  background-color: rgb(60, 0, 37);
+}

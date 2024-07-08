@@ -8,8 +8,10 @@ const { type } = require('os');
 let baseDir = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED API FEC FD';
 // Variable pour stocker le fichier Excel
 let xlsxFile = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED.xlsx';
-//Variable pour stocker le fichier Excel pour les règlements
+// Variable pour stocker le fichier Excel pour les règlements
 let xlsxFileReglement = 'C:\\Users\\alanf\\OneDrive\\Bureau\\PaiementContrat.xlsx';
+// Variable pour stocker l'icône de l'application
+let iconPath = 'C:\\Users\\alanf\\OneDrive\\Bureau\\gestion-assurance\\base-de-donnees.png';
 // Variable pour stocker le répertoire courant
 let currentDir = baseDir;
 // Variable pour stocker le répertoire du premier client pour la fusion
@@ -22,6 +24,24 @@ let typeContrat = '';
 let indexToAjoutDoc = false;
 // Variable pour stocker le type de la recherche de règlement
 let typeRechercheReglement = '';
+// Variable pour savoir si le règlement est multiple
+let multipleReglement = false;
+// Variable pour savoir si le règlement précédent est multiple
+let multipleReglementPrecedent = false;
+// Variable pour stocker la remarque à dupliquer pour les contrats multiples
+let remarqueDupliquee = '';
+// Variable pour stocker la date de règlement précédente
+let dateReglementPrecedent = '';
+// Variable pour stocker le type de paiement global
+let typePaiementGlobal = '';
+// Variable pour stocker le type de résiliation
+let typeResiliation = '';
+// Variable pour savoir si une page html est répétée si une erreur de saisie est détectée
+let repetition = false;
+// Variable pour savoir si une nouvelle fiche client est créée
+let nouvelleFicheClient = false;
+// Variable pour stocker la mainWindow
+let mainWindow;
 
 function getRowCount(xlsxFile, shitName) {
 
@@ -52,9 +72,10 @@ function getRowCount(xlsxFile, shitName) {
 }
 
 function createWindow() {
-  const mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+  mainWindow = new BrowserWindow({
+    icon:iconPath,
+    width: 1300,
+    height: 700,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       nodeIntegration: true,
@@ -109,102 +130,114 @@ ipcMain.on('submit-particuliers', (event, data) => {
   const prenomDir = data.prenom.toUpperCase();
   const dir = path.join(baseDir, `${nomDir} ${prenomDir}`);
 
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-  currentDir = dir;
+  let erreurSaisie = false;
 
-  // Load the existing workbook
-  const workbook = xlsx.readFile(xlsxFile);
-
-  // Access the first worksheet
-  const worksheetName = workbook.SheetNames.find(sheetName => sheetName === 'Particuliers');
-  const worksheet = workbook.Sheets[worksheetName];
-
-  // Store data in variables
-  const nom = capitalizeWords(data.nom);
-  const prenom = capitalizeWords(data.prenom);
-  const telephone = data.telephone;
-  const mail = data.mail;
-  const birthday = convertDateFormat(data.birthday);
-  const city = capitalizeWords(data.city);
-  const country = capitalizeWords(data.country);
-  const post = data.post;
-  const job = data.job;
-  // Get current date and time
-  var now = new Date();
-  var date = now.toLocaleDateString();
-
-  // Check for duplicate entries
-  const duplicateFound = Object.values(worksheet).some((row, index) => {
-    if (index === 0) return false; // Ignore the header row
-    const cellA = worksheet[xlsx.utils.encode_cell({r: index, c: 0})];
-    const cellB = worksheet[xlsx.utils.encode_cell({r: index, c: 1})];
-    const cellC = worksheet[xlsx.utils.encode_cell({r: index, c: 2})];
-    if (cellA && cellA.v && cellB && cellB.v && cellC && cellC.v) {
-      return cellA.v.toUpperCase() === nom.toUpperCase() && cellB.v.toUpperCase() === prenom.toUpperCase() && cellC.v.toLowerCase() === telephone.toLowerCase();
+  // Check for special characters, ç, or accent letters
+  const specialCharRegex = /[!@#$%^&*(),.?":{}|<>_çéôàèùâîëûöïüñæœÉÔÀÈÙÂÎËÛÖÏÜÑÆŒ]/g;
+  if (specialCharRegex.test(nomDir) || specialCharRegex.test(prenomDir)) {
+    showCustomAlert('Les accents et les ç ne sont pas autorisés pour le nom et le prénom');
+    erreurSaisie = true;
+  } else {
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
     }
-    return false;
-  });
+    currentDir = dir;
 
-  if (!duplicateFound) {
-    // Numéro de la ligne à mettre à jour dans le fichier Excel
-    let rowNumber = getRowCount(xlsxFile, worksheetName);
+    // Load the existing workbook
+    const workbook = xlsx.readFile(xlsxFile);
 
-    // Define the row number and new data for the row (1-based index)
-    const newRowData = {
-      A: nom,
-      B: prenom,
-      C: telephone,
-      D: mail,
-      E: birthday,
-      F: city,
-      G: country,
-      H: post,
-      I: job,
-      J: date
-    };
+    // Access the first worksheet
+    const worksheetName = workbook.SheetNames.find(sheetName => sheetName === 'Particuliers');
+    const worksheet = workbook.Sheets[worksheetName];
 
-    // Update the row data
-    Object.keys(newRowData).forEach((column) => {
-      const cellAddress = column + rowNumber;
-      worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+    // Store data in variables
+    const nom = capitalizeWords(data.nom);
+    const prenom = capitalizeWords(data.prenom);
+    const telephone = data.telephone;
+    const mail = data.mail;
+    const birthday = convertDateFormat(data.birthday);
+    const city = capitalizeWords(data.city);
+    const country = capitalizeWords(data.country);
+    const post = data.post;
+    const job = data.job;
+    // Get current date and time
+    var now = new Date();
+    var date = now.toLocaleDateString();
+
+    // Check for duplicate entries
+    const duplicateFound = Object.values(worksheet).some((row, index) => {
+      if (index === 0) return false; // Ignore the header row
+      const cellA = worksheet[xlsx.utils.encode_cell({r: index, c: 0})];
+      const cellB = worksheet[xlsx.utils.encode_cell({r: index, c: 1})];
+      const cellC = worksheet[xlsx.utils.encode_cell({r: index, c: 2})];
+      if (cellA && cellA.v && cellB && cellB.v && cellC && cellC.v) {
+        return cellA.v.toUpperCase() === nom.toUpperCase() && cellB.v.toUpperCase() === prenom.toUpperCase() && cellC.v.toLowerCase() === telephone.toLowerCase();
+      }
+      return false;
     });
 
-    // Update the worksheet range
-    worksheet['!ref'] = xlsx.utils.encode_range({
-      s: { r: 0, c: 0 },
-      e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
-    });
+    if (!duplicateFound) {
+      // Numéro de la ligne à mettre à jour dans le fichier Excel
+      let rowNumber = getRowCount(xlsxFile, worksheetName);
 
-    // Define the column widths (in characters)
-    const columnWidths = [
-      { wch: 17 }, // Column A
-      { wch: 17 }, // Column B
-      { wch: 14 }, // Column C
-      { wch: 27 }, // Column D
-      { wch: 18 }, // Column E
-      { wch: 17 }, // Column F
-      { wch: 16 }, // Column G
-      { wch: 14 }, // Column H
-      { wch: 29 },  // Column I
-      { wch: 13 }  // Column J
-    ];
+      // Define the row number and new data for the row (1-based index)
+      const newRowData = {
+        A: nom,
+        B: prenom,
+        C: telephone,
+        D: mail,
+        E: birthday,
+        F: city,
+        G: country,
+        H: post,
+        I: job,
+        J: date
+      };
 
-    // Set the column widths for the worksheet
-    worksheet['!cols'] = columnWidths;
+      // Update the row data
+      Object.keys(newRowData).forEach((column) => {
+        const cellAddress = column + rowNumber;
+        worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+      });
 
-    // Save the updated workbook
-    xlsx.writeFile(workbook, xlsxFile);
+      // Update the worksheet range
+      worksheet['!ref'] = xlsx.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+      });
+
+      // Define the column widths (in characters)
+      const columnWidths = [
+        { wch: 17 }, // Column A
+        { wch: 17 }, // Column B
+        { wch: 14 }, // Column C
+        { wch: 27 }, // Column D
+        { wch: 18 }, // Column E
+        { wch: 17 }, // Column F
+        { wch: 16 }, // Column G
+        { wch: 14 }, // Column H
+        { wch: 29 },  // Column I
+        { wch: 13 }  // Column J
+      ];
+
+      // Set the column widths for the worksheet
+      worksheet['!cols'] = columnWidths;
+
+      // Save the updated workbook
+      xlsx.writeFile(workbook, xlsxFile);
+    }
+    erreurSaisie = false;
   }
-
-  event.sender.send('folder-created', 'particuliers');
+  nouvelleFicheClient = true;
+  event.sender.send('folder-created', 'particuliers', erreurSaisie);
 });
 
 
 // Handle form submission for "Pro"
 ipcMain.on('submit-pro', (event, data) => {
   const numeroSociete = data.numeroSociete.toUpperCase();
+  const telephone = data.telephone;
+  const mail = data.mail;
   const dir = path.join(baseDir, `${numeroSociete}`);
   if (!fs.existsSync(dir)){
     fs.mkdirSync(dir);
@@ -221,7 +254,7 @@ ipcMain.on('submit-pro', (event, data) => {
 
     // Create a new worksheet with the date as the name
     const newWorksheet = xlsx.utils.aoa_to_sheet([
-      ['Nom de la société', "Date d'arrivée"]
+      ['Nom de la société', 'Téléphone', 'Mail', "Date d'arrivée"]
     ]);
   
     // Append the new worksheet to the existing workbook
@@ -257,7 +290,9 @@ ipcMain.on('submit-pro', (event, data) => {
     // Define the row number and new data for the row (1-based index)
     const newRowData = {
       A: nom,
-      B: date
+      B: telephone,
+      C: mail,
+      D: date
     };
 
     // Update the row data
@@ -275,7 +310,9 @@ ipcMain.on('submit-pro', (event, data) => {
     // Define the column widths (in characters)
     const columnWidths = [
       { wch: 21 }, // Column A
-      { wch: 17 } // Column B
+      { wch: 17 }, // Column B
+      { wch: 27 }, // Column C
+      { wch: 13 }  // Column D
     ];
 
     // Set the column widths for the worksheet
@@ -284,7 +321,7 @@ ipcMain.on('submit-pro', (event, data) => {
     // Save the updated workbook
     xlsx.writeFile(workbook, xlsxFile);
   }
-
+  nouvelleFicheClient = true;
   event.sender.send('folder-created', 'pro');
 });
 
@@ -364,7 +401,6 @@ ipcMain.on('search-client-fusion2', (event, query) => {
   event.sender.send('search-results', results);
 });
 
-// Handle client search
 ipcMain.on('search-client', (event, query) => {
   const results = [];
 
@@ -375,22 +411,24 @@ ipcMain.on('search-client', (event, query) => {
 
     // Iterate over the files
     for (const file of files) {
-      if (file.includes('&')) {
-        // If file contains &, search in subfiles
-        const subFiles = fs.readdirSync(path.join(baseDir, file));
-        // Filter the subfiles based on the query
-        const filteredSubFiles = subFiles.filter(subFile => subFile.toLowerCase().includes(query.toLowerCase()));
-        // Add the filtered subfiles to results
-        for (const subFile of filteredSubFiles) {
-          //const fileName = subFile.length > maxLength ? `${subFile.substring(0, maxLength - 3)}...` : subFile;
-          //results.push(fileName);
-          results.push(subFile);
-        }
-      } else {
-        // Filter the files based on the query
-        if (file.toLowerCase().includes(query.toLowerCase())) {
-          //const fileName = file.length > maxLength ? `${file.substring(0, maxLength - 3)}...` : file;
-          //results.push(fileName);
+      const filePath = path.join(baseDir, file);
+      const stats = fs.lstatSync(filePath);
+
+      if (stats.isDirectory()) {
+        if (file.includes('&')) {
+          // If file contains &, search in subfiles
+          const subFiles = fs.readdirSync(filePath);
+          // Filter the subfiles based on the query
+          const filteredSubFiles = subFiles.filter(subFile => subFile.toLowerCase().includes(query.toLowerCase()));
+          // Add the filtered subfiles to results
+          for (const subFile of filteredSubFiles) {
+            const subFilePath = path.join(filePath, subFile);
+            const subStats = fs.lstatSync(subFilePath);
+            if (subStats.isDirectory()) {
+              results.push(subFile);
+            }
+          }
+        } else if (file.toLowerCase().includes(query.toLowerCase())) {
           results.push(file);
         }
       }
@@ -460,9 +498,9 @@ ipcMain.on('search-contract', (event, query) => {
     contractDirs.forEach(contractDir => {
       const contractPath = path.join(currentDir, contractDir);
         if (fs.statSync(contractPath).isDirectory()) {
-          const parts = contractDir.split(' ');
-          const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
-          if (contractNumber.startsWith(query)) {
+          //const parts = contractDir.split(' ');
+          //const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+          if (contractDir.includes(query.toUpperCase())) {
             //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
             //results.push(contractDirName);
             results.push(contractDir);
@@ -482,9 +520,9 @@ ipcMain.on('search-contract', (event, query) => {
             const contractDirs = fs.readdirSync(clientPath);
 
             contractDirs.forEach(contractDir => {
-              const parts = contractDir.split(' ');
-              const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
-              if (contractNumber.startsWith(query)) {
+              //const parts = contractDir.split(' ');
+              //const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+              if (contractDir.includes(query.toUpperCase())) {
                 //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
                 //results.push(contractDirName);
                 results.push(contractDir);
@@ -501,9 +539,9 @@ ipcMain.on('search-contract', (event, query) => {
           contractDirs.forEach(contractDir => {
             const contractPath = path.join(clientPath, contractDir);
             if (fs.statSync(contractPath).isDirectory()) {
-              const parts = contractDir.split(' ');
-              const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
-              if (contractNumber.startsWith(query)) {
+              //const parts = contractDir.split(' ');
+              //const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+              if (contractDir.includes(query.toUpperCase())) {
                 //const contractDirName = contractDir.length > maxLength ? `${contractDir.substring(0, maxLength - 3)}...` : contractDir;
                 //results.push(contractDirName);
                 results.push(contractDir);
@@ -585,8 +623,11 @@ ipcMain.on('select-contract', (event, contract) => {
 
 // Handle form submission for "Documents"
 ipcMain.on('submit-documents', (event, files) => {
+  console.log('Files:', files);
   for (const doc in files) {
+    console.log('Doc:', doc);
     const file = files[doc];
+    console.log('File:', file);
     try {
       const filePath = path.join(currentDir, `${doc} ${file.name}`);
       fs.writeFileSync(filePath, file.data);
@@ -594,6 +635,7 @@ ipcMain.on('submit-documents', (event, files) => {
       console.error(`Erreur lors de l'enregistrement du fichier ${file.name}:`, error);
     }
   }
+  typeResiliation = '';
   event.sender.send('files-uploaded');
 });
 
@@ -712,12 +754,12 @@ ipcMain.on('sante-collective-selected', () => {
   typeContrat = 'sante_coll';
 });
 
-ipcMain.on('prevention-tns-selected', () => {
+ipcMain.on('prevoyance-tns-selected', () => {
   productDir = 'PREV_TNS';
   typeContrat = 'prev_tns';
 });
 
-ipcMain.on('prevention-collective-selected', () => {
+ipcMain.on('prevoyance-collective-selected', () => {
   productDir = 'PREV_COLL';
   typeContrat = 'prev_coll';
 });
@@ -752,7 +794,26 @@ ipcMain.on('submit-sante-prev', (event, data) => {
   const subDir = path.join(currentDir, subDirName);
 
   if (!fs.existsSync(subDir)) {
+    switch (typeContrat) {
+      case 'sante_tns':
+        showCustomAlert('Santé TNS créé avec succès');
+        break;
+      case 'sante':
+        showCustomAlert('Santé créé avec succès');
+        break;
+      case 'sante_coll':
+        showCustomAlert('Santé Collective créé avec succès');
+        break;
+      case 'prev_tns':
+        showCustomAlert('Prévoyance TNS créé avec succès');
+        break;
+      case 'prev_coll':
+        showCustomAlert('Prévoyance Collective créé avec succès');
+        break;
+    }
     fs.mkdirSync(subDir);
+  } else {
+    showCustomAlert('Ce dossier existe déjà');
   }
 
   currentDir = subDir;
@@ -786,121 +847,256 @@ ipcMain.on('request-client-data', (event) => {
       rows.push(row);
     }
   }
+  console.log('Client Data:', rows);
   event.sender.send('client-data', rows);
 });
 
 // Handle form submission for "Reglement Submission"
 ipcMain.on('submit-reglement', (event, data) => {
-  const nomClient = path.basename(path.dirname(currentDir));
-  const contractDir = path.basename(currentDir);
-  const words = contractDir.split(" ");
-  const numeroContrat = words[words.length - 1];
+  multipleReglement = data.contratMultiple;
+  console.log('Multiple Reglement Précédent:', multipleReglementPrecedent);
 
-  const beneficiaire = data.beneficiaire.toUpperCase();
-  let nomBeneficiaire = '';
+  if (!multipleReglementPrecedent) {
+    const nomClient = path.basename(path.dirname(currentDir));
+    const contractDir = path.basename(currentDir);
+    const words = contractDir.split(" ");
+    const numeroContrat = words[words.length - 1];
 
-  if (beneficiaire === 'CABINET') {
-    const cabinet = data.cabinet.toUpperCase();
-    const banque = data.banque.toUpperCase();
-    nomBeneficiaire = cabinet + ' ' + banque;
-  } else if (beneficiaire === 'COMPAGNIE') {
-    nomBeneficiaire = data.compagnie.toUpperCase();
-  }
+    const beneficiaire = data.beneficiaire.toUpperCase();
+    let nomBeneficiaire = '';
 
-  var now = new Date();
-  var dateSaisie = now.toLocaleDateString();
-
-  const montant = data.montant;
-  const typePaiement = data.typePaiement.toUpperCase();
-  const remarques = data.remarques;
-  const dateReglement = convertDateFormat(data.date);
-  const sheetName = convertDateToSheetName(dateReglement);
-
-  // Load the existing workbook
-  const workbook = xlsx.readFile(xlsxFileReglement);
-
-  // Access the worksheet with the name stored in the date variable
-  let worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
-
-  if (!worksheetName) {
-
-    // Create a new worksheet with the date as the name
-    const newWorksheet = xlsx.utils.aoa_to_sheet([
-      ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de saisie', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
-    ]);
-  
-    // Append the new worksheet to the existing workbook
-    xlsx.utils.book_append_sheet(workbook, newWorksheet, sheetName);
-  
-    // Save the updated workbook
-    xlsx.writeFile(workbook, xlsxFileReglement);
-    worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
-  }
-  const worksheet = workbook.Sheets[worksheetName];
-
-  // Check for duplicate entries
-  const duplicateFound = Object.values(worksheet).some((row, index) => {
-    if (index === 0) return false; // Ignore the header row
-    const cellG = worksheet[xlsx.utils.encode_cell({r: index, c: 6})];
-    if (cellG && cellG.v) {
-      return cellG.v.toUpperCase() === numeroContrat.toUpperCase();
+    if (beneficiaire === 'CABINET') {
+      const cabinet = data.cabinet.toUpperCase();
+      const banque = data.banque.toUpperCase();
+      nomBeneficiaire = cabinet + ' ' + banque;
+    } else if (beneficiaire === 'COMPAGNIE') {
+      nomBeneficiaire = data.compagnie.toUpperCase();
     }
-    return false;
-  });
 
-  if (!duplicateFound) {
+    var now = new Date();
+    var dateSaisie = now.toLocaleDateString();
 
-    // Numéro de la ligne à mettre à jour dans le fichier Excel
-    let rowNumber = getRowCount(xlsxFileReglement, worksheetName);
+    const montant = data.montant;
+    const typePaiement = data.typePaiement.toUpperCase();
+    let remarques = data.remarques;
+    const montantGlobal = data.montantGlobal;
+    if (!(montantGlobal === 0 || montantGlobal === '')) {
+      remarques = data.remarques + ' + Montant Global : ' + montantGlobal;
+    }
+    const dateReglement = convertDateFormat(data.date);
+    const sheetName = convertDateToSheetName(dateReglement);
 
-    // Define the row number and new data for the row (1-based index)
-    const newRowData = {
-      A: nomClient,
-      B: beneficiaire,
-      C: nomBeneficiaire,
-      D: dateSaisie,
-      E: dateReglement,
-      F: montant,
-      G: numeroContrat,
-      H: typeContrat,
-      I: typePaiement,
-      J: remarques
-    };
+    // Load the existing workbook
+    const workbook = xlsx.readFile(xlsxFileReglement);
 
-    // Update the row data
-    Object.keys(newRowData).forEach((column) => {
-      const cellAddress = column + rowNumber;
-      worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+    // Access the worksheet with the name stored in the date variable
+    let worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
+
+    if (!worksheetName) {
+
+      // Create a new worksheet with the date as the name
+      const newWorksheet = xlsx.utils.aoa_to_sheet([
+        ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de saisie', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
+      ]);
+    
+      // Append the new worksheet to the existing workbook
+      xlsx.utils.book_append_sheet(workbook, newWorksheet, sheetName);
+    
+      // Save the updated workbook
+      xlsx.writeFile(workbook, xlsxFileReglement);
+      worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
+    }
+    const worksheet = workbook.Sheets[worksheetName];
+
+    // Check for duplicate entries
+    const duplicateFound = Object.values(worksheet).some((row, index) => {
+      if (index === 0) return false; // Ignore the header row
+      const cellG = worksheet[xlsx.utils.encode_cell({r: index, c: 6})];
+      if (cellG && cellG.v) {
+        return cellG.v.toUpperCase() === numeroContrat.toUpperCase();
+      }
+      return false;
     });
 
-    // Update the worksheet range
-    worksheet['!ref'] = xlsx.utils.encode_range({
-      s: { r: 0, c: 0 },
-      e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+    if (!duplicateFound) {
+
+      // Numéro de la ligne à mettre à jour dans le fichier Excel
+      let rowNumber = getRowCount(xlsxFileReglement, worksheetName);
+
+      // Define the row number and new data for the row (1-based index)
+      const newRowData = {
+        A: nomClient,
+        B: beneficiaire,
+        C: nomBeneficiaire,
+        D: dateSaisie,
+        E: dateReglement,
+        F: montant,
+        G: numeroContrat,
+        H: typeContrat,
+        I: typePaiement,
+        J: remarques
+      };
+
+      // Update the row data
+      Object.keys(newRowData).forEach((column) => {
+        const cellAddress = column + rowNumber;
+        worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+      });
+
+      // Update the worksheet range
+      worksheet['!ref'] = xlsx.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+      });
+
+      // Define the column widths (in characters)
+      const columnWidths = [
+        { wch: 20 }, // Column A
+        { wch: 20 }, // Column B
+        { wch: 20 }, // Column C
+        { wch: 20 }, // Column D
+        { wch: 20 }, // Column E
+        { wch: 15 }, // Column F
+        { wch: 17 }, // Column G
+        { wch: 15 }, // Column H
+        { wch: 17 }, // Column I
+        { wch: 21 }  // Column J
+      ];
+
+      // Set the column widths for the worksheet
+      worksheet['!cols'] = columnWidths;
+
+      // Save the updated workbook
+      xlsx.writeFile(workbook, xlsxFileReglement);
+    }
+    if (multipleReglement) {
+      isReglement = true;
+      remarqueDupliquee = remarques;
+      dateReglementPrecedent = dateReglement;
+      typePaiementGlobal = typePaiement;
+    } else {
+      isReglement = false;
+    }
+  } else {
+    const nomClient = path.basename(path.dirname(currentDir));
+    const contractDir = path.basename(currentDir);
+    const words = contractDir.split(" ");
+    const numeroContrat = words[words.length - 1];
+
+    const beneficiaire = data.beneficiaire.toUpperCase();
+    let nomBeneficiaire = '';
+
+    if (beneficiaire === 'CABINET') {
+      const cabinet = data.cabinet.toUpperCase();
+      const banque = data.banque.toUpperCase();
+      nomBeneficiaire = cabinet + ' ' + banque;
+    } else if (beneficiaire === 'COMPAGNIE') {
+      nomBeneficiaire = data.compagnie.toUpperCase();
+    }
+
+    var now = new Date();
+    var dateSaisie = now.toLocaleDateString();
+
+    const montant = data.montant;
+    const typePaiement = typePaiementGlobal;
+    const remarques = remarqueDupliquee;
+    const dateReglement = dateReglementPrecedent;
+    const sheetName = convertDateToSheetName(dateReglement);
+
+    // Load the existing workbook
+    const workbook = xlsx.readFile(xlsxFileReglement);
+
+    // Access the worksheet with the name stored in the date variable
+    let worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
+
+    if (!worksheetName) {
+
+      // Create a new worksheet with the date as the name
+      const newWorksheet = xlsx.utils.aoa_to_sheet([
+        ['Nom', 'Type du bénéficiaire', 'Nom du bénéficiaire', 'Date de saisie', 'Date de règlement', 'Montant', 'Numéro de contrat', 'Type de contrat', 'Type de paiement', 'Remarques']
+      ]);
+    
+      // Append the new worksheet to the existing workbook
+      xlsx.utils.book_append_sheet(workbook, newWorksheet, sheetName);
+    
+      // Save the updated workbook
+      xlsx.writeFile(workbook, xlsxFileReglement);
+      worksheetName = workbook.SheetNames.find(shitName => shitName === sheetName);
+    }
+    const worksheet = workbook.Sheets[worksheetName];
+
+    // Check for duplicate entries
+    const duplicateFound = Object.values(worksheet).some((row, index) => {
+      if (index === 0) return false; // Ignore the header row
+      const cellG = worksheet[xlsx.utils.encode_cell({r: index, c: 6})];
+      if (cellG && cellG.v) {
+        return cellG.v.toUpperCase() === numeroContrat.toUpperCase();
+      }
+      return false;
     });
 
-    // Define the column widths (in characters)
-    const columnWidths = [
-      { wch: 20 }, // Column A
-      { wch: 20 }, // Column B
-      { wch: 20 }, // Column C
-      { wch: 20 }, // Column D
-      { wch: 20 }, // Column E
-      { wch: 15 }, // Column F
-      { wch: 17 }, // Column G
-      { wch: 15 }, // Column H
-      { wch: 17 }, // Column I
-      { wch: 21 }  // Column J
-    ];
+    if (!duplicateFound) {
 
-    // Set the column widths for the worksheet
-    worksheet['!cols'] = columnWidths;
+      // Numéro de la ligne à mettre à jour dans le fichier Excel
+      let rowNumber = getRowCount(xlsxFileReglement, worksheetName);
 
-    // Save the updated workbook
-    xlsx.writeFile(workbook, xlsxFileReglement);
+      // Define the row number and new data for the row (1-based index)
+      const newRowData = {
+        A: nomClient,
+        B: beneficiaire,
+        C: nomBeneficiaire,
+        D: dateSaisie,
+        E: dateReglement,
+        F: montant,
+        G: numeroContrat,
+        H: typeContrat,
+        I: typePaiement,
+        J: remarques
+      };
+
+      // Update the row data
+      Object.keys(newRowData).forEach((column) => {
+        const cellAddress = column + rowNumber;
+        worksheet[cellAddress] = { t: typeof newRowData[column] === 'number' ? 'n' : 's', v: newRowData[column] };
+      });
+
+      // Update the worksheet range
+      worksheet['!ref'] = xlsx.utils.encode_range({
+        s: { r: 0, c: 0 },
+        e: { r: rowNumber, c: Object.keys(newRowData).length - 1 }
+      });
+
+      // Define the column widths (in characters)
+      const columnWidths = [
+        { wch: 20 }, // Column A
+        { wch: 20 }, // Column B
+        { wch: 20 }, // Column C
+        { wch: 20 }, // Column D
+        { wch: 20 }, // Column E
+        { wch: 15 }, // Column F
+        { wch: 17 }, // Column G
+        { wch: 15 }, // Column H
+        { wch: 17 }, // Column I
+        { wch: 21 }  // Column J
+      ];
+
+      // Set the column widths for the worksheet
+      worksheet['!cols'] = columnWidths;
+
+      // Save the updated workbook
+      xlsx.writeFile(workbook, xlsxFileReglement);
+    }
+    if (multipleReglement) {
+      isReglement = true;
+      remarqueDupliquee = remarques;
+      dateReglementPrecedent = dateReglement;
+    } else {
+      isReglement = false;
+    }
   }
 
-  isReglement = false;
+  multipleReglementPrecedent = multipleReglement;
+  showCustomAlert('success', 'Règlement enregistré avec succès !');
   event.sender.send('reglement-termine');
 });
 
@@ -934,21 +1130,6 @@ ipcMain.on('index-to-ajout-doc', (event) => {
 
 ipcMain.on('index-out', (event) => {
   indexToAjoutDoc = false;
-});
-
-// Handle form submission for "Auto"
-ipcMain.on('submit-divers', (event, data) => {
-  const typeContrat = data.typeContrat.toUpperCase() || '';
-  const numeroContrat = data.numeroContrat.toUpperCase() || '';
-
-  const subDirParts = [typeContrat, numeroContrat].filter(Boolean);
-  const subDirName = subDirParts.join(' ');
-  const subDir = path.join(currentDir, subDirName);
-  if (!fs.existsSync(subDir)){
-    fs.mkdirSync(subDir);
-  }
-  currentDir = subDir;
-  event.sender.send('divers-folder-created');
 });
 
 function convertDateToSheetName(date) {
@@ -1027,35 +1208,38 @@ ipcMain.on('search', (event, searchTerm) => {
 
     // Loop through each row in the sheet
     for (let row of sheetData) {
-
-      switch (typeRechercheReglement) {
-        case 'Nom':
-          if (row['Nom'] && row['Nom'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
-            searchResults.push(row);
-          }
-          break;
-        case 'Date de saisie':
-          if (row['Date de saisie'] && row['Date de saisie'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
-            searchResults.push(row);
-          }
-          break;
-        case 'Date de règlement':
-          if (row['Date de règlement'] && row['Date de règlement'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
-            searchResults.push(row);
-          }
-          break;
-        case 'Montant':
-          if (row['Montant'] && row['Montant'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
-            searchResults.push(row);
-          }
-          break;
-        case 'Numéro de contrat':
-          if (row['Numéro de contrat'] && row['Numéro de contrat'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
-            searchResults.push(row);
-          }
-          break;
-        default:
-          break;
+      if (searchTerm === '' || searchTerm === undefined) {
+        searchResults.push(row);
+      } else {
+        switch (typeRechercheReglement) {
+          case 'Nom':
+            if (row['Nom'] && row['Nom'].toString().toLowerCase().includes(searchTerm.toLowerCase())) {
+              searchResults.push(row);
+            }
+            break;
+          case 'Date de saisie':
+            if (row['Date de saisie'] && row['Date de saisie'] === searchTerm) {
+              searchResults.push(row);
+            }
+            break;
+          case 'Date de règlement':
+            if (row['Date de règlement'] && row['Date de règlement'] === searchTerm) {
+              searchResults.push(row);
+            }
+            break;
+          case 'Montant':
+            if (row['Montant'] && row['Montant'] === searchTerm) {
+              searchResults.push(row);
+            }
+            break;
+          case 'Numéro de contrat':
+            if (row['Numéro de contrat'] && row['Numéro de contrat'].toString().toLowerCase().startsWith(searchTerm.toLowerCase())) {
+              searchResults.push(row);
+            }
+            break;
+          default:
+            break;
+        }
       }
     }
   }
@@ -1067,4 +1251,237 @@ ipcMain.on('maj-type-recherche-reglement', (event, typeRecherche) => {
   typeRechercheReglement = typeRecherche;
   console.log('Type de recherche reglement mis a jour:', typeRechercheReglement);
   event.sender.send('maj-type-recherche-reglement-done');
+});
+
+ipcMain.on('get-multiple-contracts', (event) => {
+  event.sender.send('get-multiple-contracts-done', multipleReglement);
+});
+
+ipcMain.on('multiple-contracts-out', (event) => {
+  multipleReglement = false;
+  event.sender.send('multiple-contracts-out-done', multipleReglement);
+});
+
+ipcMain.on('searchResiliation', (event, resiliationDatas) => {
+  const numeroContrat = resiliationDatas.numeroContrat;
+  typeResiliation = resiliationDatas.typeResiliation;
+
+  let contrat = '';
+  let clientPathFinal = '';
+  let found = false; // Ajoutez cette variable pour suivre si un contrat correspondant a été trouvé
+
+  const clientDirs = fs.readdirSync(baseDir);
+  clientDirs.forEach(clientDir => {
+    if (clientDir.includes('&')) {
+      const clientSubDirs = fs.readdirSync(path.join(baseDir, clientDir));
+      clientSubDirs.forEach(clientSubDir => {
+        const clientPath = path.join(baseDir, clientDir, clientSubDir);
+
+        if (fs.statSync(clientPath).isDirectory()) {
+          const contractDirs = fs.readdirSync(clientPath);
+
+          contractDirs.forEach(contractDir => {
+            const parts = contractDir.split(' ');
+            const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+            if (contractNumber === numeroContrat) {
+              clientPathFinal = clientPath;
+              contrat = contractDir;
+              found = true; // Définissez found à true lorsqu'un contrat correspondant est trouvé
+            }
+          });
+        }
+      });
+    } else {
+      const clientPath = path.join(baseDir, clientDir);
+
+      if (fs.statSync(clientPath).isDirectory()) {
+        const contractDirs = fs.readdirSync(clientPath);
+
+        contractDirs.forEach(contractDir => {
+          const contractPath = path.join(clientPath, contractDir);
+          if (fs.statSync(contractPath).isDirectory()) {
+            const parts = contractDir.split(' ');
+            const contractNumber = parts[parts.length - 1]; // Extract the last part as the contract number
+            if (contractNumber === numeroContrat) {
+              clientPathFinal = clientPath;
+              contrat = contractDir;
+              found = true; // Définissez found à true lorsqu'un contrat correspondant est trouvé
+            }
+          }
+        });
+      }
+    }
+  });
+
+  if (found) { // Vérifiez si un contrat correspondant a été trouvé
+    currentDir = path.join(clientPathFinal, contrat);
+  }
+  event.sender.send('search-results', found);
+});
+
+
+ipcMain.on('request-type-resiliation', (event) => {
+  event.sender.send('request-type-resiliation-done', typeResiliation);
+});
+
+// Handle client search
+ipcMain.on('search-client-only', (event, query) => {
+  const results = [];
+
+  // Check if the base directory exists
+  if (fs.existsSync(baseDir)) {
+    // Read all the files in the base directory
+    const files = fs.readdirSync(baseDir);
+
+    // Iterate over the files
+    for (const file of files) {
+      // Filter the files based on the query
+      if (file.toLowerCase().includes(query.toLowerCase())) {
+        //const fileName = file.length > maxLength ? `${file.substring(0, maxLength - 3)}...` : file;
+        //results.push(fileName);
+        results.push(file);
+      }
+    }
+  }
+
+  // Send the search results back to the renderer process
+  event.sender.send('search-results', results);
+});
+
+ipcMain.on('resiliation-done', () => {
+  const parentDir = path.dirname(currentDir);
+  const currentDirName = path.basename(currentDir);
+  const newDirName = 'RESILIE' + ' ' + currentDirName;
+  const newDir = path.join(parentDir, newDirName);
+
+  // Use the fs.rename() method to rename the folder
+  fs.rename(currentDir, newDir, (err) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+    currentDir = newDir;
+  });
+});
+
+ipcMain.on('request-type-recherche-reglement', (event) => {
+  event.sender.send('request-type-recherche-reglement-done', typeRechercheReglement);
+});
+
+ipcMain.on('request-client-name-produits', (event) => {
+  console.log('indextoajoutdoc:', indexToAjoutDoc);
+  if (!indexToAjoutDoc) {
+    const clientName = path.basename(currentDir);
+    const formattedClientName = capitalizeWords(clientName);
+    event.sender.send('client-name', formattedClientName, nouvelleFicheClient);
+  }
+});
+
+ipcMain.on('repetition-produits', (event) => {
+  repetition = true;
+  event.sender.send('repetition-done');
+});
+
+ipcMain.on('repetition-out', (event) => {
+  repetition = false;
+});
+
+ipcMain.on('repetition-in', (event) => {
+  repetition = true;
+});
+
+ipcMain.on('get-repetition', (event) => {
+  event.sender.send('get-repetition-done', repetition);
+});
+
+ipcMain.on('get-nouvelle-fiche-client', (event) => {
+  nouvelleFicheClient = true;
+  event.sender.send('get-nouvelle-fiche-client-done');
+});
+
+ipcMain.on('nouvelle-fiche-client-out', (event) => {
+  nouvelleFicheClient = false;
+});
+
+ipcMain.on('nouvelle-fiche-client-in', (event) => {
+  nouvelleFicheClient = true;
+});
+
+ipcMain.on('submit-PNO', (event, data) => {
+  const numeroContrat = data.numeroContrat;
+  const subDirName = `PNO ${numeroContrat}`;
+  const subDir = path.join(currentDir, subDirName);
+  if (!fs.existsSync(subDir)){
+    fs.mkdirSync(subDir);
+  }
+  currentDir = subDir;
+  showCustomAlert('Dossier PNO créé avec succès !');
+  event.sender.send('PNO-folder-created');
+});
+
+let customAlert = null
+
+function createCustomAlert() {
+  customAlert = new BrowserWindow({
+    width: 500,
+    height: 200,
+    frame: false,
+    alwaysOnTop: true,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
+    },
+  })
+
+  customAlert.loadFile('custom-alert.html')
+
+  customAlert.on('closed', () => {
+    customAlert = null
+  })
+}
+
+function showCustomAlert(message) {
+  if (!customAlert) {
+    createCustomAlert()
+  }
+
+  customAlert.webContents.send('custom-alert', message)
+}
+
+ipcMain.on('open-custom-alert', (event, message) => {
+  showCustomAlert(message)
+})
+
+ipcMain.on('close-custom-alert', () => {
+  if (customAlert) {
+    customAlert.close()
+  }
+})
+
+ipcMain.on('request-additional-data', (event) => {
+  const rows = [];
+
+  fs.readdir(currentDir, (err, files) => {
+    if (err) {
+      console.error(err);
+      return;
+    }
+
+    for (const file of files) {
+      const filePath = path.join(currentDir, file);
+
+      if (fs.statSync(filePath).isDirectory()) {
+        console.log('Directory:', file);
+        rows.push(file);
+      }
+    }
+
+    console.log('Requesting additional data', rows);
+    event.sender.send('additional-data', rows);
+  });
+});
+
+ipcMain.on('request-doc-type', (event) => {
+  console.log('Requesting document type:', typeContrat);
+  event.sender.send('request-doc-type-done', typeContrat);
 });
