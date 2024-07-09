@@ -3,15 +3,18 @@ const path = require('path');
 const xlsx = require('xlsx');
 const fs = require('fs');
 const { type } = require('os');
+const os = require('os');
 
+
+const homeDir = os.homedir() + '\\OneDrive\\Bureau';
 // Variable pour stocker le répertoire de base
-let baseDir = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED API FEC FD';
+let baseDir =  homeDir + '\\GED API FEC FD';
 // Variable pour stocker le fichier Excel
-let xlsxFile = 'C:\\Users\\alanf\\OneDrive\\Bureau\\GED.xlsx';
+let xlsxFile = homeDir + '\\GED.xlsx';
 // Variable pour stocker le fichier Excel pour les règlements
-let xlsxFileReglement = 'C:\\Users\\alanf\\OneDrive\\Bureau\\PaiementContrat.xlsx';
+let xlsxFileReglement = homeDir + '\\PaiementContrat.xlsx';
 // Variable pour stocker l'icône de l'application
-let iconPath = 'C:\\Users\\alanf\\OneDrive\\Bureau\\gestion-assurance\\base-de-donnees.png';
+let iconPath = './base-de-donnees.png';
 // Variable pour stocker le répertoire courant
 let currentDir = baseDir;
 // Variable pour stocker le répertoire du premier client pour la fusion
