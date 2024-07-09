@@ -72,14 +72,15 @@
 
     <label for="montant">Montant du virement :</label>
     <input type="number" step="0.01" min="0" max="10000000" id="montant" name="montant" required/><br><br>
-    <label for="type-paiement">Type de paiement :</label>
+
+    <label for="type-paiement" id="type-paiement-label">Type de paiement :</label>
     <select id="type-paiement" name="type-paiement" required>
       <option value="">-- Choix --</option>
       <option value="Virement">Virement</option>
       <option value="Chèque">Chèque</option>
       <option value="TIP">TIP</option>
       <option value="Espèces">Espèces</option>
-    </select><br><br>
+    </select><span id="type-paiement-br"><br><br></span>
     <label for="remarques" id="remarques-label">Remarques :</label>
     <input type="text" id="remarques" name="remarques"></input><span id="remarques-br"><br><br></span>
     <label for="date" id="date-label">Date :</label>
@@ -94,12 +95,16 @@
   <script>
     const { ipcRenderer } = require('electron');
 
+    let multipleReglementPrecedent = false;
+
     contratMultiple.addEventListener("change", function() {
       if (this.checked) {
-        document.getElementById("montant-global").style.display = "inline-block";
-        document.getElementById("montant-global-label").style.display = "inline-block";
-        document.getElementById("montant-global-br").style.display = "block";
-        document.getElementById("montant-global").required = true;
+        if (!multipleReglementPrecedent) {
+          document.getElementById("montant-global").style.display = "inline-block";
+          document.getElementById("montant-global-label").style.display = "inline-block";
+          document.getElementById("montant-global-br").style.display = "block";
+          document.getElementById("montant-global").required = true;
+        }
       } else {
         document.getElementById("montant-global").style.display = "none";
         document.getElementById("montant-global-label").style.display = "none";
@@ -108,10 +113,11 @@
     });
 
     document.addEventListener('DOMContentLoaded', function() {
-      ipcRenderer.send('get-multiple-contracts');
+      ipcRenderer.send('get-multiple-contracts-excel');
     });
 
-    ipcRenderer.on('get-multiple-contracts-done', (event, isMultiple) => {
+    ipcRenderer.on('get-multiple-contracts-excel-done', (event, isMultiple, isMultiplePrecedent) => {
+      multipleReglementPrecedent = isMultiplePrecedent;
       let exMultipleReglement = isMultiple;
       if (isMultiple) {
         document.getElementById("remarques").style.display = "none";
@@ -120,6 +126,9 @@
         document.getElementById("date").style.display = "none";
         document.getElementById("date-label").style.display = "none";
         document.getElementById("date-br").style.display = "none";
+        document.getElementById("type-paiement").style.display = "none";
+        document.getElementById("type-paiement-label").style.display = "none";
+        document.getElementById("type-paiement-br").style.display = "none";
       }
     });
 

@@ -126,6 +126,7 @@ ipcMain.on('request-doc-name', (event) => {
 
 // Handle form submission for "Particuliers"
 ipcMain.on('submit-particuliers', (event, data) => {
+  nouvelleFicheClient = false;
   const nomDir = data.nom.toUpperCase();
   const prenomDir = data.prenom.toUpperCase();
   const dir = path.join(baseDir, `${nomDir} ${prenomDir}`);
@@ -140,6 +141,7 @@ ipcMain.on('submit-particuliers', (event, data) => {
   } else {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
+      nouvelleFicheClient = true;
     }
     currentDir = dir;
 
@@ -169,14 +171,14 @@ ipcMain.on('submit-particuliers', (event, data) => {
       if (index === 0) return false; // Ignore the header row
       const cellA = worksheet[xlsx.utils.encode_cell({r: index, c: 0})];
       const cellB = worksheet[xlsx.utils.encode_cell({r: index, c: 1})];
-      const cellC = worksheet[xlsx.utils.encode_cell({r: index, c: 2})];
-      if (cellA && cellA.v && cellB && cellB.v && cellC && cellC.v) {
-        return cellA.v.toUpperCase() === nom.toUpperCase() && cellB.v.toUpperCase() === prenom.toUpperCase() && cellC.v.toLowerCase() === telephone.toLowerCase();
+      if (cellA && cellA.v && cellB && cellB.v) {
+        return cellA.v.toUpperCase() === nom.toUpperCase() && cellB.v.toUpperCase() === prenom.toUpperCase();
       }
       return false;
     });
 
     if (!duplicateFound) {
+      showCustomAlert('Base de données mise à jour avec succès');
       // Numéro de la ligne à mettre à jour dans le fichier Excel
       let rowNumber = getRowCount(xlsxFile, worksheetName);
 
@@ -225,10 +227,11 @@ ipcMain.on('submit-particuliers', (event, data) => {
 
       // Save the updated workbook
       xlsx.writeFile(workbook, xlsxFile);
+    } else {
+      showCustomAlert('Ce client existe déjà dans la base de données');
     }
     erreurSaisie = false;
   }
-  nouvelleFicheClient = true;
   event.sender.send('folder-created', 'particuliers', erreurSaisie);
 });
 
@@ -335,8 +338,11 @@ ipcMain.on('submit-auto', (event, data) => {
   const subDirParts = [marque, modele, immatriculation, numeroContrat].filter(Boolean);
   const subDirName = subDirParts.join(' ');
   const subDir = path.join(currentDir, subDirName);
-  if (!fs.existsSync(subDir)){
+  if (!fs.existsSync(subDir)) {
     fs.mkdirSync(subDir);
+    showCustomAlert('Dossier auto créé avec succès');
+  } else {
+    showCustomAlert('Ce dossier existe déjà');
   }
   currentDir = subDir;
   event.sender.send('auto-folder-created');
@@ -363,6 +369,9 @@ ipcMain.on('submit-habitation', (event, data) => {
 
   if (!fs.existsSync(subDir)) {
     fs.mkdirSync(subDir);
+    showCustomAlert('Dossier habitation créé avec succès');
+  } else {
+    showCustomAlert('Ce dossier existe déjà');
   }
 
   currentDir = subDir;
@@ -623,17 +632,20 @@ ipcMain.on('select-contract', (event, contract) => {
 
 // Handle form submission for "Documents"
 ipcMain.on('submit-documents', (event, files) => {
-  console.log('Files:', files);
-  for (const doc in files) {
-    console.log('Doc:', doc);
-    const file = files[doc];
-    console.log('File:', file);
-    try {
-      const filePath = path.join(currentDir, `${doc} ${file.name}`);
-      fs.writeFileSync(filePath, file.data);
-    } catch (error) {
-      console.error(`Erreur lors de l'enregistrement du fichier ${file.name}:`, error);
+  console.log('Files:', Object.keys(files).length);
+  if (Object.keys(files).length > 0) {
+    for (const doc in files) {
+      console.log('Doc:', doc);
+      const file = files[doc];
+      console.log('File:', file);
+      try {
+        const filePath = path.join(currentDir, `${doc} ${file.name}`);
+        fs.writeFileSync(filePath, file.data);
+      } catch (error) {
+        console.error(`Erreur lors de l'enregistrement du fichier ${file.name}:`, error);
+      }
     }
+    showCustomAlert('Fichiers téléchargés avec succès');
   }
   typeResiliation = '';
   event.sender.send('files-uploaded');
@@ -688,9 +700,8 @@ ipcMain.on('submit-fusion', (event, client) => {
   const clientDir = path.join(baseDir, clientDirFusion2);
 
   if (clientDirFusion1 === clientDir) {
-    console.error('Les deux dossiers clients pour la fusion sont identiques :', clientDirFusion1, clientDir);
-  }
-  else {
+    showCustomAlert('Les deux dossiers clients pour la fusion sont identiques');
+  } else {
     // Vérifier si les deux dossiers clients existent
     if (fs.existsSync(clientDirFusion1) && fs.existsSync(clientDir)) {
 
@@ -712,9 +723,9 @@ ipcMain.on('submit-fusion', (event, client) => {
           unmergeDirectory(dir);
         }
       });
-    }
-    else {
-      console.error('Dossiers clients introuvables pour la fusion :', clientDirFusion1, clientDir);
+      showCustomAlert('Dossiers clients fusionnés avec succès');
+    } else {
+      showCustomAlert('Dossiers clients introuvables pour la fusion');
     }
   }
   // Envoyer un message de succès à la fenêtre principale
@@ -881,7 +892,11 @@ ipcMain.on('submit-reglement', (event, data) => {
     let remarques = data.remarques;
     const montantGlobal = data.montantGlobal;
     if (!(montantGlobal === 0 || montantGlobal === '')) {
-      remarques = data.remarques + ' + Montant Global : ' + montantGlobal;
+      if (!(remarques === '' || remarques === undefined || remarques === null)) {
+        remarques = data.remarques + ' + Montant Global : ' + montantGlobal;
+      } else {
+        remarques = 'Montant Global : ' + montantGlobal;
+      }
     }
     const dateReglement = convertDateFormat(data.date);
     const sheetName = convertDateToSheetName(dateReglement);
@@ -968,14 +983,18 @@ ipcMain.on('submit-reglement', (event, data) => {
 
       // Save the updated workbook
       xlsx.writeFile(workbook, xlsxFileReglement);
-    }
-    if (multipleReglement) {
-      isReglement = true;
-      remarqueDupliquee = remarques;
-      dateReglementPrecedent = dateReglement;
-      typePaiementGlobal = typePaiement;
+
+      if (multipleReglement) {
+        isReglement = true;
+        remarqueDupliquee = remarques;
+        dateReglementPrecedent = dateReglement;
+        typePaiementGlobal = typePaiement;
+      } else {
+        isReglement = false;
+        showCustomAlert('Règlement enregistré avec succès');
+      }
     } else {
-      isReglement = false;
+      showCustomAlert('Ce contrat a déjà été réglé');
     }
   } else {
     const nomClient = path.basename(path.dirname(currentDir));
@@ -1085,18 +1104,21 @@ ipcMain.on('submit-reglement', (event, data) => {
 
       // Save the updated workbook
       xlsx.writeFile(workbook, xlsxFileReglement);
-    }
-    if (multipleReglement) {
-      isReglement = true;
-      remarqueDupliquee = remarques;
-      dateReglementPrecedent = dateReglement;
+
+      if (multipleReglement) {
+        isReglement = true;
+        remarqueDupliquee = remarques;
+        dateReglementPrecedent = dateReglement;
+      } else {
+        showCustomAlert('Règlement enregistré avec succès');
+        isReglement = false;
+      }
     } else {
-      isReglement = false;
+      showCustomAlert('Ce contrat a déjà été réglé');
     }
   }
 
   multipleReglementPrecedent = multipleReglement;
-  showCustomAlert('success', 'Règlement enregistré avec succès !');
   event.sender.send('reglement-termine');
 });
 
@@ -1257,6 +1279,10 @@ ipcMain.on('get-multiple-contracts', (event) => {
   event.sender.send('get-multiple-contracts-done', multipleReglement);
 });
 
+ipcMain.on('get-multiple-contracts-excel', (event) => {
+  event.sender.send('get-multiple-contracts-excel-done', multipleReglement, multipleReglementPrecedent);
+});
+
 ipcMain.on('multiple-contracts-out', (event) => {
   multipleReglement = false;
   event.sender.send('multiple-contracts-out-done', multipleReglement);
@@ -1315,6 +1341,8 @@ ipcMain.on('searchResiliation', (event, resiliationDatas) => {
 
   if (found) { // Vérifiez si un contrat correspondant a été trouvé
     currentDir = path.join(clientPathFinal, contrat);
+  } else {
+    showCustomAlert('Aucun contrat correspondant trouvé');
   }
   event.sender.send('search-results', found);
 });
@@ -1362,6 +1390,7 @@ ipcMain.on('resiliation-done', () => {
     }
     currentDir = newDir;
   });
+  showCustomAlert('Contrat résilié avec succès');
 });
 
 ipcMain.on('request-type-recherche-reglement', (event) => {
